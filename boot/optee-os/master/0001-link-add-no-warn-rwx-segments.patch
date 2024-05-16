@@ -1,0 +1,13 @@
+diff --git a/core/arch/arm/kernel/link.mk b/core/arch/arm/kernel/link.mk
+index 1b89b895..8af4a468 100644
+--- a/core/arch/arm/kernel/link.mk
++++ b/core/arch/arm/kernel/link.mk
+@@ -164,7 +164,7 @@ cleanfiles += $(link-out-dir)/.tee.elf.cmd
+ $(link-out-dir)/tee.elf: $(link-objs) $(libdeps) $(link-script-pp) $(FORCE_LINK)
+ 	@echo "old-link-objs := $(link-objs)" >$(link-out-dir)/.tee.elf.cmd
+ 	@$(cmd-echo-silent) '  LD      $@'
+-	$(q)$(LDcore) $(ldargs-tee.elf) -o $@
++	$(q)$(LDcore) $(ldargs-tee.elf) --no-warn-rwx-segments -o $@
+ 
+ all: $(link-out-dir)/tee.dmp
+ cleanfiles += $(link-out-dir)/tee.dmp

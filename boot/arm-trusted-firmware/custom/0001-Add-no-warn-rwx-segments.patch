@@ -1,0 +1,26 @@
+diff --git a/make_helpers/build_macros.mk b/make_helpers/build_macros.mk
+index 1c3d14d05..938aa9ef2 100644
+--- a/make_helpers/build_macros.mk
++++ b/make_helpers/build_macros.mk
+@@ -473,18 +473,18 @@ else
+ 		$$(CC) $$(TF_CFLAGS) $$(CFLAGS) -xc -c - -o $(BUILD_DIR)/build_message.o
+ endif
+ ifneq ($(findstring armlink,$(notdir $(LD))),)
+-	$$(Q)$$(LD) -o $$@ $$(TF_LDFLAGS) $$(LDFLAGS) $(BL_LDFLAGS) --entry=bl${1}_entrypoint \
++	$$(Q)$$(LD) --no-warn-rwx-segments -o $$@ $$(TF_LDFLAGS) $$(LDFLAGS) $(BL_LDFLAGS) --entry=bl${1}_entrypoint \
+ 		--predefine="-D__LINKER__=$(__LINKER__)" \
+ 		--predefine="-DTF_CFLAGS=$(TF_CFLAGS)" \
+ 		--map --list="$(MAPFILE)" --scatter=${PLAT_DIR}/scat/bl${1}.scat \
+ 		$(LDPATHS) $(LIBWRAPPER) $(LDLIBS) $(BL_LIBS) \
+ 		$(BUILD_DIR)/build_message.o $(OBJS)
+ else ifneq ($(findstring gcc,$(notdir $(LD))),)
+-	$$(Q)$$(LD) -o $$@ $$(TF_LDFLAGS) $$(LDFLAGS) -Wl,-Map=$(MAPFILE) \
++	$$(Q)$$(LD) --no-warn-rwx-segments -o $$@ $$(TF_LDFLAGS) $$(LDFLAGS) -Wl,-Map=$(MAPFILE) \
+ 		-Wl,-T$(LINKERFILE) $(BUILD_DIR)/build_message.o \
+ 		$(OBJS) $(LDPATHS) $(LIBWRAPPER) $(LDLIBS) $(BL_LIBS)
+ else
+-	$$(Q)$$(LD) -o $$@ $$(TF_LDFLAGS) $$(LDFLAGS) $(BL_LDFLAGS) -Map=$(MAPFILE) \
++	$$(Q)$$(LD) --no-warn-rwx-segments -o $$@ $$(TF_LDFLAGS) $$(LDFLAGS) $(BL_LDFLAGS) -Map=$(MAPFILE) \
+ 		--script $(LINKERFILE) $(BUILD_DIR)/build_message.o \
+ 		$(OBJS) $(LDPATHS) $(LIBWRAPPER) $(LDLIBS) $(BL_LIBS)
+ endif

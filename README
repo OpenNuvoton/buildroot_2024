@@ -1,0 +1,132 @@
+Buildroot is a simple, efficient and easy-to-use tool to generate embedded
+Linux systems through cross-compilation.
+
+The documentation can be found in docs/manual. You can generate a text
+document with 'make manual-text' and read output/docs/manual/manual.text.
+Online documentation can be found at http://buildroot.org/docs.html
+
+To build and use the buildroot stuff, do the following:
+
+1) run 'make menuconfig'
+2) select the target architecture and the packages you wish to compile
+3) run 'make'
+4) wait while it compiles
+5) find the kernel, bootloader, root filesystem, etc. in output/images
+
+You do not need to be root to build or run buildroot.  Have fun!
+
+Buildroot comes with a basic configuration for a number of boards. Run
+'make list-defconfigs' to view the list of provided configurations.
+
+# NUVOTON MA35D1 SERIES RELATED DESCRIPTION:
+============================================
+
+The following boards were test in this release:
+
+        - numaker_iot_ma35d16f70_defconfig
+        - numaker_som_ma35d16a81_defconfig
+
+NOTE: If you want to use buildroot in the tc version, you need to download the following:
+	git clone https://github.com/OpenNuvoton/MA35D1_Buildroot.git -b tc_v1.00
+
+Device tree of arm-trusted-firmware need to set cpu speed, DDR type and psci
+according to the board. do the following:
+1) run 'make numaker_som_ma35d16a81_defconfig'
+2) run 'make menuconfig'
+3) modify 'Bootloader --> (ma35d1-cpu800-wb-512m) In-tree Device Tree Source file names'
+The currently provided device tree are as follows:
+	- ma35d1-cpu800-wb-128m
+	- ma35d1-cpu800-wb-256m
+	- ma35d1-cpu800-wb-512m
+	- ma35d1-cpu1g-wb-256m
+	- ma35d1-cpu1g-wb-512m
+
+Device tree of Kernel need to set DDR size
+according to the board. do the following:
+1) run 'make numaker_som_ma35d16a81_defconfig'
+2) run 'make menuconfig'
+3) modify 'Kernel --> (nuvoton/ma35d1-som-256m) In-tree Device Tree Source file names '
+The currently provided device tree are as follows:
+	- nuvoton/ma35d1-iot-128m
+	- nuvoton/ma35d1-iot-512m
+	- nuvoton/ma35d1-som-256m
+	- nuvoton/ma35d1-som-512m
+	- nuvoton/ma35d1-som-1g
+
+After the complilatiobn is complete, you can get the complete image in
+"output/images" folder
+
+SD card image provides the full system to boot with TFA, u-Boot, Kernel and file system,
+do the following:
+1) run 'make nuvoton_ma35d1_som_defconfig'
+2) run 'make menuconfig'
+3) modify 'Bootloaders ---> Board defconfig' to 'ma35d1_sdcard0' or 'ma35d1_sdcard1'
+4) run 'make arm-trusted-firmware-dirclean uboot-dirclean linux-dirclean'
+        if you use optee-os, you need to run 'make optee-os-dirclean'
+5) run 'make'
+6) wait while it compiles
+7) find pack-core-image-buildroot-ma35d1-som-sdcard.bin and
+        core-image-buildroot-ma35d1-som.rootfs.sdcard in output/images
+
+Run the following command to write SD card image.
+Change sdx below to match the one used by the SD card.
+
+sudo dd if=core-image-buildroot-ma35d1-som.rootfs.sdcard of=/dev/sdx conv=fsync
+
+SPINAND image provides the full system to boot with TFA, u-Boot, Kernel and file system,
+do the following:
+1) run 'make numaker_som_ma35d16a81_defconfig'
+2) run 'make menuconfig'
+3) modify 'Bootloaders ---> Board defconfig' to 'ma35d1_spinand'
+4) run 'make arm-trusted-firmware-dirclean uboot-dirclean linux-dirclean'
+        if you use optee-os, you need to run 'make optee-os-dirclean'
+5) run 'make'
+6) wait while it compiles
+7) find pack-core-image-buildroot-ma35d1-som-spinand.bin in output/images
+
+NAND image provides the full system to boot with TFA, u-Boot, Kernel and file system,
+do the following:
+1) run 'make numaker_som_ma35d16a81_defconfig'
+2) run 'make menuconfig'
+3) modify 'Bootloaders ---> Board defconfig' to 'ma35d1_nand'
+4) run 'make arm-trusted-firmware-dirclean uboot-dirclean linux-dirclean'
+        if you use optee-os, you need to run 'make optee-os-dirclean'
+5) run 'make'
+6) wait while it compiles
+7) find pack-core-image-buildroot-ma35d1-som-nand.bin in output/images
+
+NOTE: pack-core-image-buildroot-#####.bin can be used by the MA35D1 nuwriter tool
+============================================
+
+Please feed suggestions, bug reports, insults, and bribes back to the
+buildroot mailing list: buildroot@buildroot.org
+You can also find us on #buildroot on OFTC IRC.
+
+If you would like to contribute patches, please read
+https://buildroot.org/manual.html#submitting-patches
+
+
+# NUVOTON NUC980 SERIES RELATED DESCRIPTION:
+============================================
+
+The following boards were test in this release:
+
+        - nuvoton_nuc980_defconfig
+        - nuvoton_nuc980_iot_defconfig
+	- nuvoton_nuc980_chili_defconfig
+	- nuvoton_nuc980_eth2uart_defconfig
+	- nuvoton_nuc980_lorag_defconfig
+
+1) For example, run 'make nuvoton_nuc980_iot_defconfig'
+2) select the target architecture and the packages you wish to compile
+3) run 'make'
+4) wait while it compiles
+5) find the kernel, dtb, bootloader, root filesystem, etc. in output/images
+
+You do not need to be root to build or run buildroot.  Have fun!
+
+If users need to modiy buildroot parameters, user can run 'make menuconfig'
+to modify buildroot parameters.
+
+Integrated in Buildroot-2024.02 by Nuvoton MPU
+Author schung@nuvoton.com
