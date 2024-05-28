@@ -18,17 +18,17 @@ OPTEE_OS_TARBALL = $(call qstrip,$(BR2_TARGET_OPTEE_OS_CUSTOM_TARBALL_LOCATION))
 OPTEE_OS_SITE = $(patsubst %/,%,$(dir $(OPTEE_OS_TARBALL)))
 OPTEE_OS_SOURCE = $(notdir $(OPTEE_OS_TARBALL))
 else ifeq ($(BR2_TARGET_OPTEE_OS_MA35D1_TARBALL),y)
-OPTEE_OS_TARBALL = $(call github,OpenNuvoton,MA35D1_optee_os-v3.9.0,$(OPTEE_OS_VERSION))/MA35D1_optee_os-v3.9.0-$(OPTEE_OS_VERSION).tar.gz
+OPTEE_OS_TARBALL = $(call github,OpenNuvoton,optee_os_ma35,$(OPTEE_OS_VERSION))/optee_os_ma35-$(OPTEE_OS_VERSION).tar.gz
 OPTEE_OS_SITE = $(patsubst %/,%,$(dir $(OPTEE_OS_TARBALL)))
 OPTEE_OS_SOURCE = $(notdir $(OPTEE_OS_TARBALL))
 BR_NO_CHECK_HASH_FOR += $(OPTEE_OS_SOURCE)
 else ifeq ($(BR2_TARGET_OPTEE_OS_MA35D0_TARBALL),y)
-OPTEE_OS_TARBALL = $(call github,OpenNuvoton,MA35D1_optee_os-v3.9.0,$(OPTEE_OS_VERSION))/MA35D1_optee_os-v3.9.0-$(OPTEE_OS_VERSION).tar.gz
+OPTEE_OS_TARBALL = $(call github,OpenNuvoton,optee_os_ma35,$(OPTEE_OS_VERSION))/optee_os_ma35-$(OPTEE_OS_VERSION).tar.gz
 OPTEE_OS_SITE = $(patsubst %/,%,$(dir $(OPTEE_OS_TARBALL)))
 OPTEE_OS_SOURCE = $(notdir $(OPTEE_OS_TARBALL))
 BR_NO_CHECK_HASH_FOR += $(OPTEE_OS_SOURCE)
 else ifeq ($(BR2_TARGET_OPTEE_OS_MA35H0_TARBALL),y)
-OPTEE_OS_TARBALL = $(call github,OpenNuvoton,MA35D1_optee_os-v3.9.0,$(OPTEE_OS_VERSION))/MA35D1_optee_os-v3.9.0-$(OPTEE_OS_VERSION).tar.gz
+OPTEE_OS_TARBALL = $(call github,OpenNuvoton,optee_os_ma35,$(OPTEE_OS_VERSION))/optee_os_ma35-$(OPTEE_OS_VERSION).tar.gz
 OPTEE_OS_SITE = $(patsubst %/,%,$(dir $(OPTEE_OS_TARBALL)))
 OPTEE_OS_SOURCE = $(notdir $(OPTEE_OS_TARBALL))
 BR_NO_CHECK_HASH_FOR += $(OPTEE_OS_SOURCE)
@@ -91,7 +91,7 @@ OPTEE_OS_MAKE_OPTS += $(call qstrip,$(BR2_TARGET_OPTEE_OS_ADDITIONAL_VARIABLES))
 
 
 # OPTEE-OS for ma35d1
-ifeq ($(call qstrip,$(BR2_TARGET_OPTEE_OS_PLATFORM)),nuvoton)
+ifeq ($(call qstrip,$(BR2_TARGET_OPTEE_OS_PLATFORM)),ma35)
 ifeq ($(call qstrip,$(BR2_TARGET_OPTEE_OS_ADDITIONAL_VARIABLES=)),)
 ifneq ($(call findstring,128,$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_INTREE_DTS_NAME)),)
 	OPTEE_OS_MAKE_OPTS += CFG_TZDRAM_START=0x87800000 CFG_SHMEM_START=0x87F00000

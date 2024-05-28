@@ -13,10 +13,30 @@ if BR2_TARGET_OPTEE_OS
 
 choice
 	prompt "OP-TEE OS version"
+	default BR2_TARGET_OPTEE_OS_MA35D1_TARBALL if BR2_NUVOTON_MA35D1
+	default BR2_TARGET_OPTEE_OS_MA35D0_TARBALL if BR2_NUVOTON_MA35D0
+	default BR2_TARGET_OPTEE_OS_MA35H0_TARBALL if BR2_NUVOTON_MA35H0
 	default BR2_TARGET_OPTEE_OS_LATEST if BR2_PACKAGE_HOST_RUSTC_ARCH_SUPPORTS
-	default BR2_TARGET_OPTEE_OS_CUSTOM_GIT if BR2_NUVOTON_MA35D1 || BR2_NUVOTON_MA35D0 || BR2_NUVOTON_MA35H0
 	help
 	  Select the version of OP-TEE OS you want to use
+
+config BR2_TARGET_OPTEE_OS_MA35D1_TARBALL
+        bool "MA35D1 tarball"
+        depends on BR2_NUVOTON_MA35D1
+        help
+          Use a custom version fetched from a tarball.
+
+config BR2_TARGET_OPTEE_OS_MA35D0_TARBALL
+        bool "MA35D0 tarball"
+        depends on BR2_NUVOTON_MA35D0
+        help
+          Use a custom version fetched from a tarball.
+
+config BR2_TARGET_OPTEE_OS_MA35H0_TARBALL
+        bool "MA35H0 tarball"
+        depends on BR2_NUVOTON_MA35H0
+        help
+          Use a custom version fetched from a tarball.
 
 config BR2_TARGET_OPTEE_OS_LATEST
 	bool "4.0.0"
@@ -42,23 +62,6 @@ config BR2_TARGET_OPTEE_OS_CUSTOM_GIT
 	help
 	  Use a custom version fetched from a Git repository.
 
-config BR2_TARGET_OPTEE_OS_MA35D1_TARBALL
-        bool "MA35D1 tarball"
-        depends on BR2_NUVOTON_MA35D1
-        help
-          Use a custom version fetched from a tarball.
-
-config BR2_TARGET_OPTEE_OS_MA35D0_TARBALL
-        bool "MA35D0 tarball"
-        depends on BR2_NUVOTON_MA35D0
-        help
-          Use a custom version fetched from a tarball.
-
-config BR2_TARGET_OPTEE_OS_MA35H0_TARBALL
-        bool "MA35H0 tarball"
-        depends on BR2_NUVOTON_MA35H0
-        help
-          Use a custom version fetched from a tarball.
 endchoice
 
 if BR2_TARGET_OPTEE_OS_CUSTOM_TARBALL
@@ -117,6 +120,7 @@ config BR2_TARGET_OPTEE_OS_NEEDS_DTC
 config BR2_TARGET_OPTEE_OS_NEEDS_PYTHON_CRYPTOGRAPHY
 	bool "OP-TEE OS needs host-python-cryptography"
 	depends on BR2_PACKAGE_HOST_RUSTC_ARCH_SUPPORTS
+	default y
 	help
 	  OP-TEE OS version below 3.16 used python-pycryptodomex
 	  package in python scripts. Newer version uses
@@ -152,7 +156,7 @@ config BR2_TARGET_OPTEE_OS_SERVICES
 
 config BR2_TARGET_OPTEE_OS_PLATFORM
 	string "Target platform (mandatory)"
-	default "nuvoton" if BR2_NUVOTON_MA35D1 || BR2_NUVOTON_MA35D0 || BR2_NUVOTON_MA35H0
+	default "ma35" if BR2_NUVOTON_MA35D1 || BR2_NUVOTON_MA35D0 || BR2_NUVOTON_MA35H0
 	help
 	  Value for the mandated PLATFORM build directive provided to
 	  OP-TEE OS.
