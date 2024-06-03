@@ -1,0 +1,33 @@
+diff -urN a/meson_options.txt b/meson_options.txt
+--- a/meson_options.txt	2023-08-03 00:02:12.000000000 +0800
++++ b/meson_options.txt	2023-12-09 11:36:23.316889988 +0800
+@@ -9,6 +9,12 @@
+ 	description: 'Weston backend: DRM/KMS'
+ )
+ option(
++        'backend-fbdev',
++        type: 'boolean',
++        value: true,
++        description: 'Weston backend: FBDEV'
++)
++option(
+ 	'backend-drm-screencast-vaapi',
+ 	type: 'boolean',
+ 	value: true,
+@@ -47,14 +53,14 @@
+ option(
+ 	'deprecated-backend-fbdev',
+ 	type: 'boolean',
+-	value: false,
++	value: true,
+ 	description: 'Weston backend: fbdev (deprecated)'
+ )
+ option(
+ 	'backend-default',
+ 	type: 'combo',
+ 	choices: [ 'auto', 'drm', 'wayland', 'x11', 'fbdev', 'headless' ],
+-	value: 'drm',
++	value: 'fbdev',
+ 	description: 'Default backend when no parent display server detected'
+ )
+ 

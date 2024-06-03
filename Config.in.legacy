@@ -859,18 +859,6 @@ config BR2_PACKAGE_LIBCURL_LIBNSS
 	help
 	  NSS was deprecated in libcurl 7.82.0.
 
-config BR2_PACKAGE_WESTON_DEFAULT_FBDEV
-	bool "weston fbdev removed"
-	select BR2_LEGACY
-	help
-	  fbdev was deprecated in weston 10.0.0.
-
-config BR2_PACKAGE_WESTON_FBDEV
-	bool "weston fbdev compositor removed"
-	select BR2_LEGACY
-	help
-	  fbdev compositor was deprecated in weston 10.0.0.
-
 config BR2_PACKAGE_PYTHON_PYCLI
 	bool "python-pycli removed"
 	select BR2_LEGACY

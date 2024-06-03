@@ -18,8 +18,8 @@ config BR2_PACKAGE_WESTON
 	select BR2_PACKAGE_JPEG
 	select BR2_PACKAGE_LIBINPUT
 	select BR2_PACKAGE_LIBDRM
-	select BR2_PACKAGE_SEATD
-	select BR2_PACKAGE_SEATD_DAEMON if !BR2_PACKAGE_SYSTEMD_LOGIND
+	select BR2_PACKAGE_PANGO
+	select BR2_PACKAGE_LIBERATION
 	# Runtime dependency
 	select BR2_PACKAGE_XKEYBOARD_CONFIG
 	select BR2_PACKAGE_WESTON_SHELL_DESKTOP if !BR2_PACKAGE_WESTON_HAS_SHELL
@@ -34,7 +34,23 @@ config BR2_PACKAGE_WESTON
 if BR2_PACKAGE_WESTON
 
 choice
+	prompt "default touchscreen"
+
+config BR2_PACKAGE_WESTON_DEFAULT_RESISTIVE_TOUCHSCREEN
+	bool "resistive"
+	select BR2_PACKAGE_WESTON_RESISTIVE_TOUCHSCREEN
+
+config BR2_PACKAGE_WESTON_DEFAULT_CAPACITIVE_TOUCHSCREEN
+	bool "capacitive"
+	select BR2_PACKAGE_WESTON_CAPACITIVE_TOUCHSCREEN
+endchoice
+
+choice
 	prompt "default compositor"
+
+config BR2_PACKAGE_WESTON_DEFAULT_FBDEV
+	bool "fbdev"
+	select BR2_PACKAGE_WESTON_FBDEV
 
 config BR2_PACKAGE_WESTON_DEFAULT_DRM
 	bool "drm"
@@ -43,15 +59,6 @@ config BR2_PACKAGE_WESTON_DEFAULT_DRM
 config BR2_PACKAGE_WESTON_DEFAULT_HEADLESS
 	bool "headless"
 	select BR2_PACKAGE_WESTON_HEADLESS
-
-config BR2_PACKAGE_WESTON_DEFAULT_RDP
-	bool "rdp"
-	depends on BR2_USE_MMU # freerdp, libglib2
-	depends on BR2_TOOLCHAIN_HAS_SYNC_4
-	depends on BR2_USE_WCHAR # freerdp
-	depends on BR2_INSTALL_LIBSTDCPP # freerdp
-	depends on BR2_PACKAGE_XORG7 # freerdp-server
-	select BR2_PACKAGE_WESTON_RDP
 
 config BR2_PACKAGE_WESTON_DEFAULT_WAYLAND
 	bool "wayland (nested)"
@@ -69,14 +76,17 @@ endchoice
 
 config BR2_PACKAGE_WESTON_DEFAULT_COMPOSITOR
 	string
+	default "fbdev"    if BR2_PACKAGE_WESTON_DEFAULT_FBDEV
 	default "drm"      if BR2_PACKAGE_WESTON_DEFAULT_DRM
 	default "headless" if BR2_PACKAGE_WESTON_DEFAULT_HEADLESS
-	default "rdp"      if BR2_PACKAGE_WESTON_DEFAULT_RDP
 	default "wayland"  if BR2_PACKAGE_WESTON_DEFAULT_WAYLAND
 	default "x11"      if BR2_PACKAGE_WESTON_DEFAULT_X11
 
 config BR2_PACKAGE_WESTON_DRM
 	bool "DRM compositor"
+
+config BR2_PACKAGE_WESTON_FBDEV
+	bool "fbdev compositor"
 
 # FreeRDP needs threads and !static, already the case for weston
 config BR2_PACKAGE_WESTON_RDP
