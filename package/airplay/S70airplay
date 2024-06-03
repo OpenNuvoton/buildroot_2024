@@ -1,0 +1,30 @@
+#! /bin/sh
+
+NAME=uxplay
+DAEMON=/usr/bin/$NAME
+UXPLAY_ARGS="-vd v4l2h264dec -vc videoconvert -vs nufbdevsink"
+
+case "$1" in
+    start)
+	printf "Starting airplay: "
+	start-stop-daemon -S -q -b --exec $DAEMON -- $UXPLAY_ARGS
+	[ $? = 0 ] && echo "OK" || echo "FAIL"
+	;;
+    stop)
+	printf "Stopping airplay: "
+	start-stop-daemon -K -q --exec $DAEMON 
+	[ $? = 0 ] && echo "OK" || echo "FAIL"
+	;;
+    restart)
+	echo "Restarting airplay: "
+	$0 stop
+	sleep 1
+	$0 start
+	;;
+    *)
+	echo "Usage: $0 {start|stop|restart}"
+	exit 1
+	;;
+esac
+
+exit 0
