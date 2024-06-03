@@ -1,0 +1,27 @@
+config BR2_PACKAGE_LVGL
+        bool "Lvgl"
+        select BR2_PACKAGE_HOST_CMAKE
+
+if BR2_PACKAGE_LVGL
+        if BR2_PACKAGE_WESTON
+                config BR2_PACKAGE_LVGL_WAYLAND
+                        bool "built as a Wayland client"
+                        select BR2_PACKAGE_LVGL_WAYLAND_CLIENT
+        endif
+
+	config BR2_PACKAGE_LVGL_TOUCHSCREEN
+		bool "built with touchscreen support"
+
+	if BR2_PACKAGE_LVGL_TOUCHSCREEN
+		choice
+        	prompt "default touchscreen type"
+			config BR2_PACKAGE_LVGL_DEFAULT_CAPACITIVE_TOUCHSCREEN
+        			bool "capacitive"
+        			select BR2_PACKAGE_LVGL_CAPACITIVE_TOUCHSCREEN
+			config BR2_PACKAGE_LVGL_DEFAULT_RESISTIVE_TOUCHSCREEN
+        			bool "resistive"
+        			select BR2_PACKAGE_LVGL_RESISTIVE_TOUCHSCREEN
+		endchoice
+
+	endif
+endif

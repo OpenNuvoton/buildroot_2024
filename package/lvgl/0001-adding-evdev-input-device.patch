@@ -1,0 +1,46 @@
+diff -urN a/lv_conf.h b/lv_conf.h
+--- a/lv_conf.h	2024-05-07 13:30:27.000000000 -0500
++++ b/lv_conf.h	2024-06-01 22:40:40.110379985 -0500
+@@ -886,7 +886,7 @@
+ #define LV_USE_TFT_ESPI         0
+ 
+ /*Driver for evdev input devices*/
+-#define LV_USE_EVDEV    0
++#define LV_USE_EVDEV    1
+ 
+ /*Drivers for LCD devices connected via SPI/parallel port*/
+ #define LV_USE_ST7735       0
+diff -urN a/main.c b/main.c
+--- a/main.c	2024-05-07 13:30:27.000000000 -0500
++++ b/main.c	2024-06-01 22:41:06.285163556 -0500
+@@ -39,16 +39,29 @@
+ #error Unsupported configuration
+ #endif
+ 
++#if LV_USE_EVDEV
++static void lv_linux_indev_init(void)
++{
++    const char *device = getenv_default("LV_LINUX_EVDEV_DEVICE", "/dev/input/event0");
++    lv_evdev_create(LV_INDEV_TYPE_POINTER, device);
++}
++#else
++#error Unsupported input device
++#endif
++
+ int main(void)
+ {
+     lv_init();
+ 
+     /*Linux display device init*/
+     lv_linux_disp_init();
++	
++    /*Linux evdev input device init*/
++    lv_linux_indev_init();
+ 
+     /*Create a Demo*/
+     lv_demo_widgets();
+-    lv_demo_widgets_start_slideshow();
++    /*lv_demo_widgets_start_slideshow();*/
+ 
+     /*Handle LVGL tasks*/
+     while(1) {
