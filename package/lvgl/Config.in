@@ -21,6 +21,7 @@ if BR2_PACKAGE_LVGL
 			config BR2_PACKAGE_LVGL_DEFAULT_RESISTIVE_TOUCHSCREEN
         			bool "resistive"
         			select BR2_PACKAGE_LVGL_RESISTIVE_TOUCHSCREEN
+				select BR2_PACKAGE_TSLIB
 		endchoice
 
 	endif

@@ -1,0 +1,200 @@
+diff -urN a/CMakeLists.txt b/CMakeLists.txt
+--- a/CMakeLists.txt	2024-05-07 13:30:27.000000000 -0500
++++ b/CMakeLists.txt	2024-06-03 07:23:49.620530975 -0500
+@@ -19,6 +19,6 @@
+ find_package(SDL2_image)
+ include_directories(${SDL2_INCLUDE_DIRS} ${SDL2_IMAGE_INCLUDE_DIRS})
+ 
+-target_link_libraries(main lvgl lvgl::examples lvgl::demos lvgl::thorvg ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} ${Libdrm_LIBRARIES} m pthread)
++target_link_libraries(main lvgl lvgl::examples lvgl::demos lvgl::thorvg ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} ${Libdrm_LIBRARIES} m pthread ##TSLIB_LIBRARIES##)
+ add_custom_target (run COMMAND ${EXECUTABLE_OUTPUT_PATH}/main DEPENDS main)
+ 
+diff -urN a/lv_conf.h b/lv_conf.h
+--- a/lv_conf.h	2024-06-03 07:25:27.307659687 -0500
++++ b/lv_conf.h	2024-06-03 07:24:05.940929367 -0500
+@@ -886,7 +886,10 @@
+ #define LV_USE_TFT_ESPI         0
+ 
+ /*Driver for evdev input devices*/
+-#define LV_USE_EVDEV    1
++#define LV_USE_EVDEV    0
++
++/*Driver for tslib input devices*/
++#define LV_USE_TSLIB    1
+ 
+ /*Drivers for LCD devices connected via SPI/parallel port*/
+ #define LV_USE_ST7735       0
+diff -urN a/lvgl/src/drivers/lv_drivers.h b/lvgl/src/drivers/lv_drivers.h
+--- a/lvgl/src/drivers/lv_drivers.h	2024-05-07 13:30:27.000000000 -0500
++++ b/lvgl/src/drivers/lv_drivers.h	2024-06-03 07:23:26.533332937 -0500
+@@ -33,6 +33,7 @@
+ 
+ #include "evdev/lv_evdev.h"
+ #include "libinput/lv_libinput.h"
++#include "tslib/lv_tslib.h"
+ 
+ #include "windows/lv_windows_input.h"
+ #include "windows/lv_windows_display.h"
+diff -urN a/lvgl/src/drivers/tslib/lv_tslib.c b/lvgl/src/drivers/tslib/lv_tslib.c
+--- a/lvgl/src/drivers/tslib/lv_tslib.c	1969-12-31 18:00:00.000000000 -0600
++++ b/lvgl/src/drivers/tslib/lv_tslib.c	2024-06-03 06:14:57.226686264 -0500
+@@ -0,0 +1,94 @@
++/**
++ * @file lv_tslib.c
++ *
++ */
++
++/**********************
++ *      INCLUDES
++ **********************/
++#include "lv_tslib.h"
++#if LV_USE_TSLIB
++
++#include <unistd.h>
++#include <fcntl.h>
++#include <errno.h>
++#include <tslib.h>
++
++#include "../../misc/lv_assert.h"
++//#include "../../misc/lv_log.h"
++
++/**********************
++ *      TYPEDEFS
++ **********************/
++
++typedef struct {
++    struct tsdev *ts_dev;
++} lv_tslib_t;
++
++
++/**
++ * Read the coordinate of point
++ */
++static void _tslib_read(lv_indev_t * indev, lv_indev_data_t * data)
++{
++    struct ts_sample sample;
++    int ret;
++    
++    lv_tslib_t * dsc = lv_indev_get_driver_data(indev);
++    LV_ASSERT_NULL(dsc);
++    
++    ret = ts_read(dsc->ts_dev, &sample, 1);
++    if (ret < 0) {
++        LV_LOG_ERROR("ts_read error\n");
++        ts_close(dsc->ts_dev);
++        exit(1);
++    }
++    
++    if (ret != 1) {
++        return true;
++    }
++    
++    if (sample.pressure > 0) {
++        data->state = LV_INDEV_STATE_PRESSED;
++    } else {
++        data->state = LV_INDEV_STATE_RELEASED;
++    }
++
++    data->point.x = sample.x;
++    data->point.y = sample.y;
++
++    return false;
++}
++
++lv_indev_t * lv_tslib_create(lv_indev_type_t indev_type, const char * dev_path)
++{
++    lv_tslib_t * dsc = lv_malloc_zeroed(sizeof(lv_tslib_t));
++    LV_ASSERT_MALLOC(dsc);
++    if (dsc == NULL) return NULL;
++    
++    dsc->ts_dev = ts_setup(dev_path, 1);
++    if (!dsc->ts_dev) {
++        LV_LOG_ERROR("Failed to setup ts_setup()\n");
++        lv_free(dsc);
++        return NULL;
++    }
++    
++    lv_indev_t * indev = lv_indev_create();
++    
++    lv_indev_set_type(indev, indev_type);
++    lv_indev_set_read_cb(indev, _tslib_read);
++    lv_indev_set_driver_data(indev, dsc);
++    
++    return indev;
++}
++
++void lv_tslib_delete(lv_indev_t * indev)
++{
++    lv_tslib_t * dsc = lv_indev_get_driver_data(indev);
++    LV_ASSERT_NULL(dsc);
++   
++    lv_free(dsc);
++    lv_indev_delete(indev);
++}
++
++#endif /*LV_USE_TSLIB*/
+diff -urN a/lvgl/src/drivers/tslib/lv_tslib.h b/lvgl/src/drivers/tslib/lv_tslib.h
+--- a/lvgl/src/drivers/tslib/lv_tslib.h	1969-12-31 18:00:00.000000000 -0600
++++ b/lvgl/src/drivers/tslib/lv_tslib.h	2024-06-03 04:19:48.079622697 -0500
+@@ -0,0 +1,39 @@
++/**
++ * @file lv_tslib.h
++ *
++ */
++
++#ifndef LV_TSLIB_H
++#define LV_TSLIB_H
++
++#ifdef __cplusplus
++extern "C" {
++#endif
++
++/*********************
++ *      INCLUDES
++ *********************/
++
++#include "../../indev/lv_indev.h"
++
++#if LV_USE_TSLIB
++
++/**********************
++ * GLOBAL PROTOTYPES
++ **********************/
++
++/**
++ * Create evdev input device.
++ * @param type LV_INDEV_TYPE_POINTER or LV_INDEV_TYPE_KEYPAD
++ * @param dev_path device path, e.g., /dev/input/event0 (TSLIB_TSDEVICE)
++ * @return pointer to input device or NULL if opening failed
++ */
++lv_indev_t * lv_tslib_create(lv_indev_type_t indev_type, const char * dev_path);
++
++#endif /*LV_USE_TSLIB*/
++
++#ifdef __cplusplus
++} /*extern "C"*/
++#endif
++
++#endif /*LV_TSLIB_H*/
+diff -urN a/main.c b/main.c
+--- a/main.c	2024-06-03 07:25:27.308662024 -0500
++++ b/main.c	2024-06-03 07:24:22.652186578 -0500
+@@ -39,10 +39,16 @@
+ #error Unsupported configuration
+ #endif
+ 
+-#if LV_USE_EVDEV
++#if LV_USE_TSLIB
+ static void lv_linux_indev_init(void)
+ {
+-    const char *device = getenv_default("LV_LINUX_EVDEV_DEVICE", "/dev/input/event0");
++	const char *device = getenv_default("LV_LINUX_TSLIB_DEVICE", "/dev/input/event0");
++	lv_tslib_create(LV_INDEV_TYPE_POINTER, device);
++}
++#elif LV_USE_EVDEV
++static void lv_linux_indev_init(void)
++{
++	const char *device = getenv_default("LV_LINUX_EVDEV_DEVICE", "/dev/input/event0");
+     lv_evdev_create(LV_INDEV_TYPE_POINTER, device);
+ }
+ #else

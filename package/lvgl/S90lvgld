@@ -5,6 +5,9 @@ EXECUTABLE="/usr/bin/$DAEMON"
 
 LVGL_ARGS=""
 
+##export TSLIB_TSDEVICE=/dev/input/event0
+##export TSLIB_CALIBFILE=/etc/pointercal
+
 function moduleExist() {
 	MODULE="$1"
 	if lsmod | grep "$MODULE" &> /dev/null ; then
@@ -27,6 +30,8 @@ start() {
 	else
 		insmod /lib/modules/`uname -r`/galcore.ko
 	fi
+	
+	##if [[ ! -f "$TSLIB_CALIBFILE" ]]; then ts_calibrate; fi
 
 	start-stop-daemon -b -S -q -x "$EXECUTABLE" \
 		-- $LVGL_ARGS
