@@ -1,0 +1,154 @@
+diff '--exclude=.git' -urN a/CMakeLists.txt b/CMakeLists.txt
+--- a/CMakeLists.txt	2023-05-31 09:39:07.730490288 +0800
++++ b/CMakeLists.txt	2023-05-30 19:55:21.801034230 +0800
+@@ -8,3 +8,6 @@
+ 
+ add_executable(${PROJECT_NAME} main.c mouse_cursor_icon.c)
+ target_link_libraries(${PROJECT_NAME} PRIVATE lvgl lvgl::examples lvgl::demos lvgl::drivers)
++
++set(CMAKE_INSTALL_PREFIX "/usr")
++install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+diff '--exclude=.git' -urN a/lv_drivers/CMakeLists.txt b/lv_drivers/CMakeLists.txt
+--- a/lv_drivers/CMakeLists.txt	2023-05-31 09:43:08.263265114 +0800
++++ b/lv_drivers/CMakeLists.txt	2023-05-30 17:26:05.766214198 +0800
+@@ -30,6 +30,7 @@
+   set(INC_INSTALL_DIR "include/lvgl/lv_drivers")
+ endif()
+ 
++#[[
+ install(
+   DIRECTORY "${CMAKE_SOURCE_DIR}/"
+   DESTINATION "${CMAKE_INSTALL_PREFIX}/${INC_INSTALL_DIR}/"
+@@ -56,3 +57,4 @@
+   LIBRARY DESTINATION "${LIB_INSTALL_DIR}"
+   RUNTIME DESTINATION "${LIB_INSTALL_DIR}"
+   PUBLIC_HEADER DESTINATION "${INC_INSTALL_DIR}")
++]]
+diff '--exclude=.git' -urN a/lv_drivers/wayland/wayland.c b/lv_drivers/wayland/wayland.c
+--- a/lv_drivers/wayland/wayland.c	2023-05-31 09:43:08.271264320 +0800
++++ b/lv_drivers/wayland/wayland.c	2023-05-31 09:31:39.638032091 +0800
+@@ -1950,12 +1950,16 @@
+         lv_disp_flush_ready(disp_drv);
+         return;
+     }
++#if 0 
++    /* https://github.com/lvgl/lv_drivers/issues/225 
++       Temporarily patched by Nuvoton@Arthur Jiang */
+     else if (buffer->busy)
+     {
+         LV_LOG_WARN("skip flush since wayland backing buffer is busy");
+         lv_disp_flush_ready(disp_drv);
+         return;
+     }
++#endif
+ 
+     int32_t x;
+     int32_t y;
+diff '--exclude=.git' -urN a/lv_drv_conf.h b/lv_drv_conf.h
+--- a/lv_drv_conf.h	2023-05-31 09:39:07.730490288 +0800
++++ b/lv_drv_conf.h	2023-05-30 11:14:19.039791524 +0800
+@@ -174,7 +174,7 @@
+  *  Wayland drivers (monitor, mouse, keyboard, touchscreen)
+  *---------------------------------------*/
+ #ifndef USE_WAYLAND
+-#  define USE_WAYLAND       0
++#  define USE_WAYLAND       1
+ #endif
+ 
+ #if USE_WAYLAND
+@@ -316,7 +316,7 @@
+  *  Linux frame buffer device (/dev/fbx)
+  *-----------------------------------------*/
+ #ifndef USE_FBDEV
+-#  define USE_FBDEV           1
++#  define USE_FBDEV           0
+ #endif
+ 
+ #if USE_FBDEV
+diff '--exclude=.git' -urN a/lvgl/env_support/cmake/custom.cmake b/lvgl/env_support/cmake/custom.cmake
+--- a/lvgl/env_support/cmake/custom.cmake	2023-05-31 09:43:08.487242877 +0800
++++ b/lvgl/env_support/cmake/custom.cmake	2023-05-30 17:27:38.210573359 +0800
+@@ -57,6 +57,7 @@
+   set(INC_INSTALL_DIR "include/lvgl")
+ endif()
+ 
++#[[
+ install(
+   DIRECTORY "${CMAKE_SOURCE_DIR}/src"
+   DESTINATION "${CMAKE_INSTALL_PREFIX}/${INC_INSTALL_DIR}/"
+@@ -77,3 +78,4 @@
+   LIBRARY DESTINATION "${LIB_INSTALL_DIR}"
+   RUNTIME DESTINATION "${LIB_INSTALL_DIR}"
+   PUBLIC_HEADER DESTINATION "${INC_INSTALL_DIR}")
++ ]]
+diff '--exclude=.git' -urN a/main.c b/main.c
+--- a/main.c	2023-05-31 09:39:07.730490288 +0800
++++ b/main.c	2023-05-31 05:25:08.423005353 +0800
+@@ -1,6 +1,8 @@
+ #include "lvgl/lvgl.h"
+ #include "lvgl/demos/lv_demos.h"
++#if USE_FBDEV
+ #include "lv_drivers/display/fbdev.h"
++#endif
+ #include "lv_drivers/indev/evdev.h"
+ #include <unistd.h>
+ #include <pthread.h>
+@@ -9,11 +11,50 @@
+ 
+ #define DISP_BUF_SIZE (128 * 1024)
+ 
++#if USE_WAYLAND
++#  if LV_USE_DEMO_WIDGETS
++#    define WINDOW_WIDTH    640
++#    define WINDOW_HEIGHT   360
++#    define WINDOW_TITLE    "Wayland Client - Widgets"
++#  elif LV_USE_DEMO_BENCHMARK
++#    define WINDOW_WIDTH    512
++#    define WINDOW_HEIGHT   300
++#    define WINDOW_TITLE    "Wayland Client - Benchmark"
++#  else
++#    define WINDOW_WIDTH    640
++#    define WINDOW_HEIGHT   360
++#    define WINDOW_TITLE    "Wayland Client - LVGL"
++#  endif
++#endif
++
+ int main(void)
+ {
+     /*LittlevGL init*/
+     lv_init();
+ 
++#if USE_WAYLAND
++    /*Wayland init*/
++    lv_wayland_init();
++
++    /*Create Wayland window*/
++    lv_wayland_create_window(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE, NULL);
++
++#if LV_USE_DEMO_WIDGETS
++    lv_demo_widgets();
++#elif LV_USE_DEMO_BENCHMARK
++    lv_demo_benchmark();
++#endif
++
++    while (1) {
++        lv_timer_handler();
++        usleep(5000);
++    }
++
++    lv_wayland_deinit();
++
++#endif
++
++#if USE_FBDEV
+     /*Linux frame buffer device init*/
+     fbdev_init();
+ 
+@@ -59,6 +100,7 @@
+         usleep(5000);
+     }
+ 
++#endif
+     return 0;
+ }
+ 

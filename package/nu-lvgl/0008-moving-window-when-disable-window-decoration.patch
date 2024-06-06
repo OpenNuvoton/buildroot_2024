@@ -1,0 +1,110 @@
+diff -urN a/lv_conf.h b/lv_conf.h
+--- a/lv_conf.h	2024-02-06 19:43:13.839274971 -0500
++++ b/lv_conf.h	2024-02-06 19:42:29.933115054 -0500
+@@ -620,7 +620,7 @@
+ #define LV_USE_GIF 0
+ 
+ /*QR code library*/
+-#define LV_USE_QRCODE 0
++#define LV_USE_QRCODE 1
+ 
+ /*FreeType library*/
+ #define LV_USE_FREETYPE 0
+diff -urN a/lv_drivers/CMakeLists.txt b/lv_drivers/CMakeLists.txt
+--- a/lv_drivers/CMakeLists.txt	2024-02-06 19:43:13.827274412 -0500
++++ b/lv_drivers/CMakeLists.txt	2024-02-06 19:41:20.529051593 -0500
+@@ -3,7 +3,7 @@
+ project(lv_drivers HOMEPAGE_URL https://github.com/lvgl/lv_drivers/)
+ 
+ # Option to build as shared library (as opposed to static), default: OFF
+-option(BUILD_SHARED_LIBS "Build shared as library (as opposed to static)" OFF)
++option(BUILD_SHARED_LIBS "Build shared as library (as opposed to static)" ON)
+ 
+ file(GLOB_RECURSE SOURCES ./*.c)
+ 
+diff -urN a/lv_drivers/wayland/wayland.c b/lv_drivers/wayland/wayland.c
+--- a/lv_drivers/wayland/wayland.c	2024-02-06 19:43:13.815273854 -0500
++++ b/lv_drivers/wayland/wayland.c	2024-02-06 19:41:12.464509190 -0500
+@@ -324,7 +324,7 @@
+     app->pointer_obj->input.pointer.y = pos_y;
+ 
+ #if (LV_WAYLAND_CLIENT_SIDE_DECORATIONS && LV_WAYLAND_XDG_SHELL)
+-    if (!app->pointer_obj->window->xdg_toplevel || app->opt_disable_decorations)
++    if (!app->pointer_obj->window->xdg_toplevel /* Arthur || app->opt_disable_decorations*/)
+     {
+         return;
+     }
+@@ -466,6 +466,30 @@
+     int pos_y = app->pointer_obj->input.pointer.y;
+ #endif
+ 
++    if (application.opt_disable_decorations)
++    {
++        /* Arthur Jiang: patched by Nuvoton */
++        if ((button == BTN_LEFT) && (state == WL_POINTER_BUTTON_STATE_PRESSED))
++        {
++#if LV_WAYLAND_XDG_SHELL
++            if (window->xdg_toplevel)
++            {
++                xdg_toplevel_move(window->xdg_toplevel, app->wl_seat, serial);
++                window->flush_pending = true;
++            }
++#endif
++
++#if LV_WAYLAND_WL_SHELL
++            if (window->wl_shell_surface)
++            {
++                wl_shell_surface_move(window->wl_shell_surface, app->wl_seat, serial);
++                window->flush_pending = true;
++            }
++#endif
++            return;
++        }
++    }
++
+     switch (app->pointer_obj->type)
+     {
+     case OBJECT_WINDOW:
+@@ -900,6 +924,11 @@
+     switch (app->touch_obj->type)
+     {
+     case OBJECT_TITLEBAR:
++    case OBJECT_WINDOW:
++        if (!app->opt_disable_decorations && app->touch_obj->type == OBJECT_WINDOW)
++	{
++		break; /* Arthur */
++	}
+ #if LV_WAYLAND_XDG_SHELL
+         if (window->xdg_toplevel)
+         {
+@@ -1147,6 +1176,7 @@
+ static const struct xdg_toplevel_listener xdg_toplevel_listener = {
+     .configure = xdg_toplevel_handle_configure,
+     .close = xdg_toplevel_handle_close,
++    .configure_bounds = xdg_toplevel_handle_configure_bounds
+ };
+ 
+ static void xdg_wm_base_ping(void *data, struct xdg_wm_base *xdg_wm_base, uint32_t serial)
+@@ -2347,6 +2377,10 @@
+     window->lv_disp_drv.hor_res = hor_res;
+     window->lv_disp_drv.ver_res = ver_res;
+     window->lv_disp_drv.flush_cb = _lv_wayland_flush;
++#if LV_COLOR_SCREEN_TRANSP
++    /* Arthur: transparent background */
++    window->lv_disp_drv.screen_transp = 1;
++#endif
+     window->lv_disp_drv.user_data = window;
+ 
+     /* Register display */
+diff -urN a/lvgl/env_support/cmake/custom.cmake b/lvgl/env_support/cmake/custom.cmake
+--- a/lvgl/env_support/cmake/custom.cmake	2024-02-06 19:43:13.831274598 -0500
++++ b/lvgl/env_support/cmake/custom.cmake	2024-02-06 19:41:27.885531508 -0500
+@@ -12,7 +12,7 @@
+ get_filename_component(LV_CONF_DIR ${LV_CONF_PATH} DIRECTORY)
+ 
+ # Option to build shared libraries (as opposed to static), default: OFF
+-option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
++option(BUILD_SHARED_LIBS "Build shared libraries" ON)
+ 
+ file(GLOB_RECURSE SOURCES ${LVGL_ROOT_DIR}/src/*.c)
+ file(GLOB_RECURSE EXAMPLE_SOURCES ${LVGL_ROOT_DIR}/examples/*.c)

@@ -21,12 +21,12 @@ define LVGL_CONFIGURE_TOUCHSCREEN
 		sed -i 's/#define LV_USE_EVDEV.*/#define LV_USE_EVDEV    0/' $(@D)/lv_conf.h; \
 		sed -i 's/#define LV_USE_TSLIB.*/#define LV_USE_TSLIB    1/' $(@D)/lv_conf.h; \
 		sed -i 's/##TSLIB_LIBRARIES##/ts/' $(@D)/CMakeLists.txt; \
-                echo "resistive touchscreen"; \
-        else \
+	fi
+
+        @if grep -Eq "^BR2_PACKAGE_LVGL_DEFAULT_CAPACITIVE_TOUCHSCREEN=y$\" ${BR2_CONFIG}; then \
 		sed -i 's/#define LV_USE_EVDEV.*/#define LV_USE_EVDEV    1/' $(@D)/lv_conf.h; \
 		sed -i 's/#define LV_USE_TSLIB.*/#define LV_USE_TSLIB    0/' $(@D)/lv_conf.h; \
 		sed -i 's/##TSLIB_LIBRARIES##//' $(@D)/CMakeLists.txt; \
-                echo "capacitive touchscreen"; \
         fi
 endef
 LVGL_POST_PATCH_HOOKS += LVGL_CONFIGURE_TOUCHSCREEN

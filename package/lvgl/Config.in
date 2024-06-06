@@ -1,11 +1,13 @@
 config BR2_PACKAGE_LVGL
         bool "Lvgl"
+	depends on !BR2_PACKAGE_WESTON
         select BR2_PACKAGE_HOST_CMAKE
 
 if BR2_PACKAGE_LVGL
         if BR2_PACKAGE_WESTON
                 config BR2_PACKAGE_LVGL_WAYLAND
                         bool "built as a Wayland client"
+			depends on BR2_PACKAGE_WESTON
                         select BR2_PACKAGE_LVGL_WAYLAND_CLIENT
         endif
 

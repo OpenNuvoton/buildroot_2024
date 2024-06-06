@@ -1,0 +1,25 @@
+diff -urN a/lv_drivers/wayland/wayland.c b/lv_drivers/wayland/wayland.c
+--- a/lv_drivers/wayland/wayland.c	2023-06-16 15:15:48.672672052 +0800
++++ b/lv_drivers/wayland/wayland.c	2023-06-16 15:12:53.181514483 +0800
+@@ -1493,8 +1493,9 @@
+     switch (decoration->type)
+     {
+     case OBJECT_TITLEBAR:
++	/* Arthur Jiang @nuvoton (C) transparent titlebar */
+         lv_color_fill((lv_color_t *)buffer->base,
+-                      lv_color_make(0x66, 0x66, 0x66), (decoration->width * decoration->height));
++                  (lv_color_t)LV_COLOR_ARGB(160, 186, 20, 2), (decoration->width * decoration->height));
+         break;
+     case OBJECT_BUTTON_CLOSE:
+         lv_color_fill((lv_color_t *)buffer->base,
+diff -urN a/lvgl/src/misc/lv_color.h b/lvgl/src/misc/lv_color.h
+--- a/lvgl/src/misc/lv_color.h	2023-02-14 21:55:24.000000000 +0800
++++ b/lvgl/src/misc/lv_color.h	2023-06-16 15:14:19.118810143 +0800
+@@ -165,6 +165,7 @@
+ 
+ # define _LV_COLOR_ZERO_INITIALIZER32  {{0x00, 0x00, 0x00, 0x00}}
+ # define LV_COLOR_MAKE32(r8, g8, b8) {{b8, g8, r8, 0xff}} /*Fix 0xff alpha*/
++# define LV_COLOR_ARGB(a8, r8, g8, b8) {{b8, g8, r8, a8}} /*Arthur Jiang @nuvoton (C)*/
+ 
+ /*---------------------------------------
+  * Macros for the current color depth

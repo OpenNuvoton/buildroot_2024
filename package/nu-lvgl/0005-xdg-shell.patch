@@ -1,0 +1,59 @@
+diff -urN a/lv_drivers/wayland/wayland.c b/lv_drivers/wayland/wayland.c
+--- a/lv_drivers/wayland/wayland.c	2023-12-11 09:29:48.685840521 +0800
++++ b/lv_drivers/wayland/wayland.c	2023-12-11 09:23:25.953855621 +0800
+@@ -33,7 +33,7 @@
+ #endif
+ 
+ #if LV_WAYLAND_XDG_SHELL
+-#include "protocols/wayland-xdg-shell-client-protocol.h"
++#include "protocols/xdg-shell-client-protocol.h"
+ #endif
+ 
+ /*********************
+@@ -1147,7 +1147,6 @@
+ static const struct xdg_toplevel_listener xdg_toplevel_listener = {
+     .configure = xdg_toplevel_handle_configure,
+     .close = xdg_toplevel_handle_close,
+-    .configure_bounds = xdg_toplevel_handle_configure_bounds
+ };
+ 
+ static void xdg_wm_base_ping(void *data, struct xdg_wm_base *xdg_wm_base, uint32_t serial)
+@@ -1767,7 +1766,7 @@
+     }
+ 
+     // Create shell surface
+-     if (0)
++    if (0)
+     {
+         // Needed for #if madness below
+     }
+diff -urN a/lv_drv_conf.h b/lv_drv_conf.h
+--- a/lv_drv_conf.h	2023-12-11 09:29:48.669839341 +0800
++++ b/lv_drv_conf.h	2023-12-11 09:23:35.418540367 +0800
+@@ -184,11 +184,11 @@
+ #  endif
+ /* Support for (deprecated) wl-shell protocol */
+ #  ifndef LV_WAYLAND_WL_SHELL
+-#    define LV_WAYLAND_WL_SHELL 1
++#    define LV_WAYLAND_WL_SHELL 0
+ #  endif
+ /* Support for xdg-shell protocol */
+ #  ifndef LV_WAYLAND_XDG_SHELL
+-#    define LV_WAYLAND_XDG_SHELL 0
++#    define LV_WAYLAND_XDG_SHELL 1
+ #  endif
+ #endif
+ 
+diff -urN a/main.c b/main.c
+--- a/main.c	2023-12-11 09:29:48.701841701 +0800
++++ b/main.c	2023-12-11 09:23:54.979957043 +0800
+@@ -4,8 +4,8 @@
+ #include "lv_drivers/display/fbdev.h"
+ #endif
+ #include "lv_drivers/indev/evdev.h"
++#include "lv_drivers/wayland/wayland.h"
+ #include <unistd.h>
+-#include <pthread.h>
+ #include <time.h>
+ #include <sys/time.h>
+ 

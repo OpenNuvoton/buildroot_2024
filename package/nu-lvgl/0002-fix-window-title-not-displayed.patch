@@ -1,0 +1,32 @@
+diff -urN a/lv_drivers/wayland/wayland.c b/lv_drivers/wayland/wayland.c
+--- a/lv_drivers/wayland/wayland.c	2023-06-16 13:27:13.675843899 +0800
++++ b/lv_drivers/wayland/wayland.c	2023-06-16 13:24:40.013274844 +0800
+@@ -2393,6 +2393,28 @@
+         LV_LOG_ERROR("failed to register keyboard indev");
+     }
+ 
++#if LV_WAYLAND_CLIENT_SIDE_DECORATIONS
++    /* Patch by Arthur Jiang @nuvoton REF: https://github.com/lvgl/lv_drivers/issues/260 */
++    if (application.opt_disable_decorations == false)
++    {
++        // Arthur: lv_wayland_draw_window_title
++        struct graphic_object * titlebar = window->decoration[OBJECT_TITLEBAR];
++        lv_obj_t * canvas = lv_canvas_create(NULL);
++
++        lv_canvas_set_buffer(canvas, (lv_color_t *)titlebar->buffer.base, titlebar->width,
++            titlebar->height, LV_IMG_CF_TRUE_COLOR_ALPHA);
++
++        lv_draw_label_dsc_t label_dsc;
++        lv_draw_label_dsc_init(&label_dsc);
++        label_dsc.font = &lv_font_montserrat_14;
++        label_dsc.color = lv_color_make(0xff, 0xff, 0xff);
++
++        lv_canvas_draw_text(canvas, 6, 6, titlebar->width, &label_dsc, title);
++
++        lv_obj_del(canvas);
++    }
++#endif
++
+     return window->lv_disp;
+ }
+ 

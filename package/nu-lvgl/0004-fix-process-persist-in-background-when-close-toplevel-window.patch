@@ -1,0 +1,61 @@
+diff -urN a/lv_conf.h b/lv_conf.h
+--- a/lv_conf.h	2023-02-14 21:55:24.000000000 +0800
++++ b/lv_conf.h	2023-07-05 21:00:22.640925131 +0800
+@@ -333,9 +333,9 @@
+  *https://fonts.google.com/specimen/Montserrat*/
+ #define LV_FONT_MONTSERRAT_8  0
+ #define LV_FONT_MONTSERRAT_10 0
+-#define LV_FONT_MONTSERRAT_12 0
++#define LV_FONT_MONTSERRAT_12 1
+ #define LV_FONT_MONTSERRAT_14 1
+-#define LV_FONT_MONTSERRAT_16 0
++#define LV_FONT_MONTSERRAT_16 1
+ #define LV_FONT_MONTSERRAT_18 0
+ #define LV_FONT_MONTSERRAT_20 0
+ #define LV_FONT_MONTSERRAT_22 0
+diff -urN a/main.c b/main.c
+--- a/main.c	2023-07-05 21:03:42.470287038 +0800
++++ b/main.c	2023-07-05 20:41:23.099437204 +0800
+@@ -15,15 +15,19 @@
+ #  if LV_USE_DEMO_WIDGETS
+ #    define WINDOW_WIDTH    640
+ #    define WINDOW_HEIGHT   360
+-#    define WINDOW_TITLE    "Wayland Client - Widgets"
++#    define WINDOW_TITLE    "LVGL - Widgets"
+ #  elif LV_USE_DEMO_BENCHMARK
+ #    define WINDOW_WIDTH    512
+ #    define WINDOW_HEIGHT   300
+-#    define WINDOW_TITLE    "Wayland Client - Benchmark"
++#    define WINDOW_TITLE    "LVGL - Benchmark"
++#  elif LV_USE_DEMO_MUSIC
++#    define WINDOW_WIDTH    800
++#    define WINDOW_HEIGHT   450
++#    define WINDOW_TITLE    "LVGL - Music"
+ #  else
+ #    define WINDOW_WIDTH    640
+ #    define WINDOW_HEIGHT   360
+-#    define WINDOW_TITLE    "Wayland Client - LVGL"
++#    define WINDOW_TITLE    "LVGL - Demo"
+ #  endif
+ #endif
+ 
+@@ -37,15 +41,17 @@
+     lv_wayland_init();
+ 
+     /*Create Wayland window*/
+-    lv_wayland_create_window(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE, NULL);
++    lv_disp_t *display = lv_wayland_create_window(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE, NULL);
+ 
+ #if LV_USE_DEMO_WIDGETS
+     lv_demo_widgets();
+ #elif LV_USE_DEMO_BENCHMARK
+     lv_demo_benchmark();
++#elif LV_USE_DEMO_MUSIC
++    lv_demo_music();
+ #endif
+ 
+-    while (1) {
++    while (lv_wayland_window_is_open(display)) {
+         lv_timer_handler();
+         usleep(5000);
+     }

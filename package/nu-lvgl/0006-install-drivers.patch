@@ -1,0 +1,32 @@
+diff -urN a/lv_drivers/CMakeLists.txt b/lv_drivers/CMakeLists.txt
+--- a/lv_drivers/CMakeLists.txt	2024-02-06 00:19:12.834385921 -0500
++++ b/lv_drivers/CMakeLists.txt	2024-02-06 00:17:18.980116878 -0500
+@@ -30,7 +30,6 @@
+   set(INC_INSTALL_DIR "include/lvgl/lv_drivers")
+ endif()
+ 
+-#[[
+ install(
+   DIRECTORY "${CMAKE_SOURCE_DIR}/"
+   DESTINATION "${CMAKE_INSTALL_PREFIX}/${INC_INSTALL_DIR}/"
+@@ -57,4 +56,3 @@
+   LIBRARY DESTINATION "${LIB_INSTALL_DIR}"
+   RUNTIME DESTINATION "${LIB_INSTALL_DIR}"
+   PUBLIC_HEADER DESTINATION "${INC_INSTALL_DIR}")
+-]]
+diff -urN a/lvgl/env_support/cmake/custom.cmake b/lvgl/env_support/cmake/custom.cmake
+--- a/lvgl/env_support/cmake/custom.cmake	2024-02-06 00:19:12.834385921 -0500
++++ b/lvgl/env_support/cmake/custom.cmake	2024-02-06 00:18:04.166602208 -0500
+@@ -57,7 +57,6 @@
+   set(INC_INSTALL_DIR "include/lvgl")
+ endif()
+ 
+-#[[
+ install(
+   DIRECTORY "${CMAKE_SOURCE_DIR}/src"
+   DESTINATION "${CMAKE_INSTALL_PREFIX}/${INC_INSTALL_DIR}/"
+@@ -78,4 +77,3 @@
+   LIBRARY DESTINATION "${LIB_INSTALL_DIR}"
+   RUNTIME DESTINATION "${LIB_INSTALL_DIR}"
+   PUBLIC_HEADER DESTINATION "${INC_INSTALL_DIR}")
+- ]]
