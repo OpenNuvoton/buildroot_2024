@@ -23,7 +23,7 @@ SDL2_CONF_OPTS += \
 	--disable-video-vivante \
 	--disable-video-cocoa \
 	--disable-video-metal \
-	--disable-video-wayland \
+	$(if $(BR2_PACKAGE_WAYLAND),--enable-video-wayland,--disable-video-wayland) \
 	--disable-video-dummy \
 	--disable-video-offscreen \
 	--disable-video-vulkan \

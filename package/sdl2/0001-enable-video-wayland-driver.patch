@@ -1,0 +1,12 @@
+diff -urN a/configure b/configure
+--- a/configure	2023-11-02 11:03:38.000000000 -0600
++++ b/configure	2024-08-14 02:08:21.991131102 -0600
+@@ -23254,7 +23254,7 @@
+             if $PKG_CONFIG --exists 'wayland-client >= 1.18' wayland-scanner wayland-egl wayland-cursor egl 'xkbcommon >= 0.5.0'; then
+                 WAYLAND_CFLAGS=`$PKG_CONFIG --cflags wayland-client wayland-egl wayland-cursor xkbcommon`
+                 WAYLAND_LIBS=`$PKG_CONFIG --libs wayland-client wayland-egl wayland-cursor xkbcommon`
+-                WAYLAND_SCANNER=`$PKG_CONFIG --variable=wayland_scanner wayland-scanner`
++                WAYLAND_SCANNER=${HOST_DIR}`$PKG_CONFIG --variable=wayland_scanner wayland-scanner`
+                 if $PKG_CONFIG --exists 'wayland-scanner >= 1.15'
+ then :
+   WAYLAND_SCANNER_CODE_MODE=private-code
