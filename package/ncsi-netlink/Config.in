@@ -1,0 +1,16 @@
+config BR2_PACKAGE_NCSI_NETLINK_ARCH_SUPPORTS
+	bool
+	default y if BR2_arm
+	default y if BR2_aarch64
+
+config BR2_PACKAGE_NCSI_NETLINK
+	bool "ncsi-netlink"
+	depends on BR2_PACKAGE_NCSI_NETLINK_ARCH_SUPPORTS
+	depends on !BR2_STATIC_LIBS
+	depends on BR2_PACKAGE_LIBNL
+	help
+	  A simple command line utility to interact with NCSI over Netlink.
+	  This uses the libnl library to talk Netlink. The Makefile assumes 
+	  cross-compiling against a shared libnl library specified via LIBNL_INCDIR and LIBNL_LIBDIR, eg:
+
+	  https://github.com/sammj/ncsi-netlink 
