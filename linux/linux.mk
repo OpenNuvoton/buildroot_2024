@@ -462,8 +462,16 @@ ifeq ($(BR2_LINUX_KERNEL_DTB_IS_SELF_BUILT),)
 define LINUX_BUILD_DTB
 	$(TOPDIR)/linux/dts-reserve \
 		$(LINUX_ARCH_PATH)/boot/dts/nuvoton/$(MA35).dtsi
+	$(if $(BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_M4_WITH_IPI),$(TOPDIR)/linux/ampipi.sh \
+		$(LINUX_ARCH_PATH)/boot/dts/nuvoton/$(MA35).dtsi \
+		"M" \
+		$(strip $(BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_SHMEM_BASE)) \
+		$(strip $(BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_SHMEM_SIZE)))
 	$(if $(BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_A35_WITH_IPI),$(TOPDIR)/linux/ampipi.sh \
-		$(LINUX_ARCH_PATH)/boot/dts/nuvoton/$(MA35).dtsi)
+		$(LINUX_ARCH_PATH)/boot/dts/nuvoton/$(MA35).dtsi \
+		"A" \
+		$(strip $(BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_SHMEM_BASE)) \
+		$(strip $(BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_SHMEM_SIZE)))
 	$(if $(BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_A35),$(TOPDIR)/linux/dts-reserve \
 		$(LINUX_ARCH_PATH)/boot/dts/nuvoton/$(MA35).dtsi \
 		$(strip $(BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_A35_BASE)) \
@@ -710,3 +718,4 @@ linux-rebuild-with-initramfs:
 	$(call LINUX_INSTALL_IMAGE,$(BINARIES_DIR))
 	# If there is a .ub file copy it to the final destination
 	test ! -f $(LINUX_IMAGE_PATH).ub || cp $(LINUX_IMAGE_PATH).ub $(BINARIES_DIR)
+
