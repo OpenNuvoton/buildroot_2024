@@ -274,16 +274,6 @@ else
 LINUX_ARCH_PATH = $(LINUX_DIR)/arch/$(KERNEL_ARCH)
 endif
 
-ifeq ($(BR2_LINUX_KERNEL_VMLINUX),y)
-LINUX_IMAGE_PATH = $(LINUX_DIR)/$(LINUX_IMAGE_NAME)
-else ifeq ($(BR2_LINUX_KERNEL_VMLINUZ),y)
-LINUX_IMAGE_PATH = $(LINUX_DIR)/$(LINUX_IMAGE_NAME)
-else ifeq ($(BR2_LINUX_KERNEL_VMLINUZ_BIN),y)
-LINUX_IMAGE_PATH = $(LINUX_DIR)/$(LINUX_IMAGE_NAME)
-else
-LINUX_IMAGE_PATH = $(LINUX_ARCH_PATH)/boot/$(LINUX_IMAGE_NAME)
-endif # BR2_LINUX_KERNEL_VMLINUX
-
 define LINUX_APPLY_LOCAL_PATCHES
 	for p in $(filter-out ftp://% http://% https://%,$(LINUX_PATCHES)) ; do \
 		if test -d $$p ; then \
@@ -294,7 +284,35 @@ define LINUX_APPLY_LOCAL_PATCHES
 	done
 endef
 
+ifeq ($(BR2_LINUX_KERNEL_VMLINUX),y)
+LINUX_IMAGE_PATH = $(LINUX_DIR)/$(LINUX_IMAGE_NAME)
+else ifeq ($(BR2_LINUX_KERNEL_VMLINUZ),y)
+LINUX_IMAGE_PATH = $(LINUX_DIR)/$(LINUX_IMAGE_NAME)
+else ifeq ($(BR2_LINUX_KERNEL_VMLINUZ_BIN),y)
+LINUX_IMAGE_PATH = $(LINUX_DIR)/$(LINUX_IMAGE_NAME)
+else
+LINUX_IMAGE_PATH = $(LINUX_ARCH_PATH)/boot/$(LINUX_IMAGE_NAME)
+endif # BR2_LINUX_KERNEL_VMLINUX
+
 LINUX_POST_PATCH_HOOKS += LINUX_APPLY_LOCAL_PATCHES
+
+ifeq ($(BR2_LINUX_KERNEL_USE_DEFCONFIG),y)
+ifeq ($(BR2_TARGET_KERNEL_DRM_MA35_VERSION),y)
+LINUX_KCONFIG_DEFCONFIG = $(call qstrip,$(BR2_LINUX_KERNEL_DEFCONFIG))_drm_defconfig
+else
+LINUX_KCONFIG_DEFCONFIG = $(call qstrip,$(BR2_LINUX_KERNEL_DEFCONFIG))_defconfig
+endif
+else ifeq ($(BR2_LINUX_KERNEL_USE_ARCH_DEFAULT_CONFIG),y)
+ifeq ($(BR2_powerpc64le),y)
+LINUX_KCONFIG_DEFCONFIG = ppc64le_defconfig
+else
+LINUX_KCONFIG_DEFCONFIG = defconfig
+endif
+else ifeq ($(BR2_LINUX_KERNEL_USE_CUSTOM_CONFIG),y)
+LINUX_KCONFIG_FILE = $(call qstrip,$(BR2_LINUX_KERNEL_CUSTOM_CONFIG_FILE))
+endif
+LINUX_KCONFIG_FRAGMENT_FILES = $(call qstrip,$(BR2_LINUX_KERNEL_CONFIG_FRAGMENT_FILES))
+LINUX_KCONFIG_EDITORS = menuconfig xconfig gconfig nconfig
 
 # Older versions break on gcc 10+ because of redefined symbols
 define LINUX_DROP_YYLLOC
@@ -336,20 +354,6 @@ define LINUX_KERNEL_CUSTOM_LOGO_CONVERT
 endef
 LINUX_PRE_BUILD_HOOKS += LINUX_KERNEL_CUSTOM_LOGO_CONVERT
 endif
-
-ifeq ($(BR2_LINUX_KERNEL_USE_DEFCONFIG),y)
-LINUX_KCONFIG_DEFCONFIG = $(call qstrip,$(BR2_LINUX_KERNEL_DEFCONFIG))_defconfig
-else ifeq ($(BR2_LINUX_KERNEL_USE_ARCH_DEFAULT_CONFIG),y)
-ifeq ($(BR2_powerpc64le),y)
-LINUX_KCONFIG_DEFCONFIG = ppc64le_defconfig
-else
-LINUX_KCONFIG_DEFCONFIG = defconfig
-endif
-else ifeq ($(BR2_LINUX_KERNEL_USE_CUSTOM_CONFIG),y)
-LINUX_KCONFIG_FILE = $(call qstrip,$(BR2_LINUX_KERNEL_CUSTOM_CONFIG_FILE))
-endif
-LINUX_KCONFIG_FRAGMENT_FILES = $(call qstrip,$(BR2_LINUX_KERNEL_CONFIG_FRAGMENT_FILES))
-LINUX_KCONFIG_EDITORS = menuconfig xconfig gconfig nconfig
 
 # LINUX_MAKE_FLAGS overrides HOSTCC to allow the kernel build to find
 # our host-openssl and host-libelf. However, this triggers a bug in
@@ -535,6 +539,7 @@ endif
 # The call to disable gcc-plugins is a stop-gap measure:
 #   http://lists.busybox.net/pipermail/buildroot/2020-May/282727.html
 define LINUX_BUILD_CMDS
+	$(if $(BR2_TARGET_KERNEL_DRM_MA35_VERSION),`sed -i "s/ma35d1\.dtsi/ma35d1-drm\.dtsi/" $(LINUX_ARCH_PATH)/boot/dts/$(addsuffix .dts,$(LINUX_DTS_NAME))`,`sed -i "s/ma35d1-drm\.dtsi/ma35d1\.dtsi/" $(LINUX_ARCH_PATH)/boot/dts/$(addsuffix .dts,$(LINUX_DTS_NAME))`)
 	$(if $(BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_A35), \
 	$(call KCONFIG_ENABLE_OPT,CONFIG_COMMON_CLK_FIXED_UNUSED), \
 	$(call KCONFIG_DISABLE_OPT,CONFIG_COMMON_CLK_FIXED_UNUSED))
