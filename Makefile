@@ -981,6 +981,13 @@ gconfig: $(BUILD_DIR)/buildroot-config/gconf outputmakefile
 
 menuconfig: $(BUILD_DIR)/buildroot-config/mconf outputmakefile
 	@$(COMMON_CONFIG_ENV) $< $(CONFIG_CONFIG_IN)
+	@if grep -q "6_6_VERSION=y" $(@D)/.config; then \
+		sed -i "s/CUSTOM_5_10=y/CUSTOM_6_6=y/" $(BR2_CONFIG); \
+		sed -i "s/CUSTOM_6_6 is not set/CUSTOM_5_10 is not set/" $(BR2_CONFIG); \
+	else \
+		sed -i "s/CUSTOM_6_6=y/CUSTOM_5_10=y/" $(BR2_CONFIG); \
+		sed -i "s/CUSTOM_5_10 is not set/CUSTOM_6_6 is not set/" $(BR2_CONFIG); \
+	fi
 
 nconfig: $(BUILD_DIR)/buildroot-config/nconf outputmakefile
 	@$(COMMON_CONFIG_ENV) $< $(CONFIG_CONFIG_IN)
