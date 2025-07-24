@@ -29,13 +29,11 @@ LINUX_TARBALL = $(call qstrip,$(BR2_LINUX_KERNEL_CUSTOM_TARBALL_LOCATION))
 LINUX_SITE = $(patsubst %/,%,$(dir $(LINUX_TARBALL)))
 LINUX_SOURCE = $(notdir $(LINUX_TARBALL))
 else ifeq ($(BR2_LINUX_KERNEL_MA35_5_10_VERSION),y)
-LINUX_NAME = MA35D1_linux-5.10.y
 LINUX_TARBALL = $(call github,OpenNuvoton,MA35D1_linux-5.10.y,$(call qstrip,$(BR2_TARGET_KERNEL_MA35_VERSION)))/MA35D1_linux-5.10.y-$(call qstrip,$(BR2_TARGET_KERNEL_MA35_VERSION)).tar.gz
 LINUX_SITE = $(patsubst %/,%,$(dir $(LINUX_TARBALL)))
 LINUX_SOURCE = $(notdir $(LINUX_TARBALL))
 else ifeq ($(BR2_LINUX_KERNEL_MA35_6_6_VERSION),y)
-LINUX_NAME = MA35D1_linux-6.6.y
-LINUX_TARBALL = $(call github,OpenNuvoton,MA35D1_linux-6.6.y,$(call qstrip,$(BR2_TARGET_KERNEL_MA35_VERSION)))/MA35D1_linux-6.6.y-$(call qstrip,$(BR2_TARGET_KERNEL_MA35_VERSION)).tar.gz
+LINUX_TARBALL = $(call github,OpenNuvoton,MA35D1_linux-6.6.y-beta,$(call qstrip,$(BR2_TARGET_KERNEL_MA35_VERSION)))/MA35D1_linux-6.6.y-$(call qstrip,$(BR2_TARGET_KERNEL_MA35_VERSION)).tar.gz
 LINUX_SITE = $(patsubst %/,%,$(dir $(LINUX_TARBALL)))
 LINUX_SOURCE = $(notdir $(LINUX_TARBALL))
 else ifeq ($(BR2_LINUX_KERNEL_CUSTOM_GIT),y)
@@ -711,7 +709,6 @@ endif
 
 endif # BR_BUILDING
 
-BR2_BACKUP_SITE = $(call github,OpenNuvoton,$(LINUX_HEADERS_CUSTOM_NAME)-beta,master)
 $(eval $(kconfig-package))
 
 # Support for rebuilding the kernel after the cpio archive has
