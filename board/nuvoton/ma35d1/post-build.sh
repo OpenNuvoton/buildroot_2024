@@ -5,8 +5,8 @@ MODULES_TDIR=$TARGET_DIR/lib/modules/5.10.140
 GFXDRIVERS_TDIR=$TARGET_DIR/usr/lib/directfb-1.7-7/gfxdrivers
 
 if grep -Eq "^BR2_LINUX_KERNEL_MA35_6_6_VERSION=y$" ${BR2_CONFIG}; then
-       MODULES_DIR=board/nuvoton/ma35d1/modules/6.6.63
-       MODULES_TDIR=$TARGET_DIR/lib/modules/6.6.63
+       MODULES_DIR=board/nuvoton/ma35d1/modules/6.6.93
+       MODULES_TDIR=$TARGET_DIR/lib/modules/6.6.93
 fi
 
 RESIZE_FILE=${TARGET_DIR}/etc/init.d/S50resize
