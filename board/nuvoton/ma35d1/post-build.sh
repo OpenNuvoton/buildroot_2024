@@ -24,12 +24,16 @@ fi
 
 if grep -Eq "^BR2_PACKAGE_BUSYBOX=y$" ${BR2_CONFIG}; then
 	install -d -m 755 ${MODULES_TARGET_TDIR}
-	install -d -m 755 ${GFXDRIVERS_TDIR}
 	cp ${MODULES_DIR}/*.ko ${MODULES_TDIR}/
-	cp ${MODULES_DIR}/../libdirectfb_gal.so ${GFXDRIVERS_TDIR}/
-	cp ${MODULES_DIR}/../libGAL.so ${TARGET_DIR}/usr/lib/
-	cp ${MODULES_DIR}/../modules.sh ${TARGET_DIR}/etc/profile.d/
-	if grep -Eq "^BR2_TARGET_KERNEL_DRM_MA35_VERSION=y$" ${BR2_CONFIG}; then
-		sed -i '1d' ${TARGET_DIR}/etc/profile.d/modules.sh
+	if grep -Eq "^BR2_LINUX_KERNEL_MA35_6_6_VERSION=y$" ${BR2_CONFIG}; then
+		cp ${MODULES_DIR}/../6.6.93_modules.sh ${TARGET_DIR}/etc/profile.d/modules.sh
+	else
+		install -d -m 755 ${GFXDRIVERS_TDIR}
+		cp ${MODULES_DIR}/../libdirectfb_gal.so ${GFXDRIVERS_TDIR}/
+		cp ${MODULES_DIR}/../libGAL.so ${TARGET_DIR}/usr/lib/
+		cp ${MODULES_DIR}/../modules.sh ${TARGET_DIR}/etc/profile.d/
+		if grep -Eq "^BR2_TARGET_KERNEL_DRM_MA35_VERSION=y$" ${BR2_CONFIG}; then
+			sed -i '1d' ${TARGET_DIR}/etc/profile.d/modules.sh
+		fi
 	fi
 fi
