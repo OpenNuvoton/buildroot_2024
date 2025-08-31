@@ -207,7 +207,7 @@ LINUX_DTS_NAME += $(call qstrip,$(BR2_LINUX_KERNEL_INTREE_DTS_NAME))
 # and .dtsi files in BR2_LINUX_KERNEL_CUSTOM_DTS_PATH. Both will be
 # copied to arch/<arch>/boot/dts, but only the .dts files will
 # actually be generated as .dtb.
-LINUX_DTS_NAME += $(basename $(filter %.dts,$(notdir $(call qstrip,$(BR2_LINUX_KERNEL_CUSTOM_DTS_PATH)))))
+LINUX_DTS_NAME += $(addprefix nuvoton/,$(basename $(filter %.dts,$(notdir $(call qstrip,$(BR2_LINUX_KERNEL_CUSTOM_DTS_PATH))))))
 
 LINUX_DTBS = $(addsuffix .dtb,$(LINUX_DTS_NAME))
 
@@ -343,6 +343,12 @@ define LINUX_TRY_PATCH_TIMECONST
 	fi
 endef
 LINUX_POST_PATCH_HOOKS += LINUX_TRY_PATCH_TIMECONST
+
+define LINUX_ADD_DTB_MAKE_RULES
+	$(foreach dts,$(call qstrip,$(BR2_LINUX_KERNEL_CUSTOM_DTS_PATH)), \
+		echo "dtb-y += $(patsubst %.dts,%.dtb,$(notdir $(dts)))" >> $(LINUX_ARCH_PATH)/boot/dts/nuvoton/Makefile
+	)
+endef
 
 LINUX_KERNEL_CUSTOM_LOGO_PATH = $(call qstrip,$(BR2_LINUX_KERNEL_CUSTOM_LOGO_PATH))
 ifneq ($(LINUX_KERNEL_CUSTOM_LOGO_PATH),)
@@ -539,13 +545,14 @@ endif
 # The call to disable gcc-plugins is a stop-gap measure:
 #   http://lists.busybox.net/pipermail/buildroot/2020-May/282727.html
 define LINUX_BUILD_CMDS
-	$(if $(BR2_NUVOTON_MA35D1), $(if $(BR2_TARGET_KERNEL_DRM_MA35_VERSION),`sed -i "s/ma35d1\.dtsi/ma35d1-drm\.dtsi/" $(LINUX_ARCH_PATH)/boot/dts/$(addsuffix .dts,$(LINUX_DTS_NAME))`,`sed -i "s/ma35d1-drm\.dtsi/ma35d1\.dtsi/" $(LINUX_ARCH_PATH)/boot/dts/$(addsuffix .dts,$(LINUX_DTS_NAME))`))
+	
 	$(if $(BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_A35), \
-	$(call KCONFIG_ENABLE_OPT,CONFIG_COMMON_CLK_FIXED_UNUSED), \
-	$(call KCONFIG_DISABLE_OPT,CONFIG_COMMON_CLK_FIXED_UNUSED))
+		$(call KCONFIG_ENABLE_OPT,CONFIG_COMMON_CLK_FIXED_UNUSED), \
+		$(call KCONFIG_DISABLE_OPT,CONFIG_COMMON_CLK_FIXED_UNUSED) 
+	)
 	$(call KCONFIG_DISABLE_OPT,CONFIG_GCC_PLUGINS)
 	$(foreach dts,$(call qstrip,$(BR2_LINUX_KERNEL_CUSTOM_DTS_PATH)), \
-		cp -f $(dts) $(LINUX_ARCH_PATH)/boot/dts/
+		cp -f $(dts) $(LINUX_ARCH_PATH)/boot/dts/nuvoton/
 	)
 	if grep -q "CONFIG_ARCH_NUC980=y" $(@D)/.config; then  \
 		mkdir -p $(@D)/../image; \
@@ -556,8 +563,13 @@ define LINUX_BUILD_CMDS
 	if grep -q "BR2_TARGET_OPTEE_OS=y" .config; then \
 		cat board/nuvoton/$(MA35)/optee.config >> $(@D)/.config; \
 	fi
+	$(if $(BR2_NUVOTON_MA35D1), \
+		$(if $(BR2_TARGET_KERNEL_DRM_MA35_VERSION), \
+			`sed -i "s/ma35d1\.dtsi/ma35d1-drm\.dtsi/" $(LINUX_ARCH_PATH)/boot/dts/$(addsuffix .dts,$(LINUX_DTS_NAME))`, \
+			`sed -i "s/ma35d1-drm\.dtsi/ma35d1\.dtsi/" $(LINUX_ARCH_PATH)/boot/dts/$(addsuffix .dts,$(LINUX_DTS_NAME))`))
 	$(LINUX_MAKE_ENV) $(BR2_MAKE) $(LINUX_MAKE_FLAGS) -C $(@D) all
 	$(LINUX_MAKE_ENV) $(BR2_MAKE) $(LINUX_MAKE_FLAGS) -C $(@D) $(LINUX_TARGET_NAME)
+	$(LINUX_ADD_DTB_MAKE_RULES)
 	$(LINUX_BUILD_DTB)
 	$(LINUX_APPEND_DTB)
 endef
