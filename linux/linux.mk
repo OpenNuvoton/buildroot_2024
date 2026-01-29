@@ -32,7 +32,15 @@ else ifeq ($(BR2_LINUX_KERNEL_MA35_5_10_VERSION),y)
 LINUX_TARBALL = $(call github,OpenNuvoton,MA35D1_linux-5.10.y,$(call qstrip,$(BR2_TARGET_KERNEL_MA35_VERSION)))/MA35D1_linux-5.10.y-$(call qstrip,$(BR2_TARGET_KERNEL_MA35_VERSION)).tar.gz
 LINUX_SITE = $(patsubst %/,%,$(dir $(LINUX_TARBALL)))
 LINUX_SOURCE = $(notdir $(LINUX_TARBALL))
+else ifeq ($(BR2_LINUX_KERNEL_MA35_5_10_RT_VERSION),y)
+LINUX_TARBALL = $(call github,OpenNuvoton,MA35D1_linux-5.10.y,$(call qstrip,$(BR2_TARGET_KERNEL_MA35_VERSION)))/MA35D1_linux-5.10.y-$(call qstrip,$(BR2_TARGET_KERNEL_MA35_VERSION)).tar.gz
+LINUX_SITE = $(patsubst %/,%,$(dir $(LINUX_TARBALL)))
+LINUX_SOURCE = $(notdir $(LINUX_TARBALL))
 else ifeq ($(BR2_LINUX_KERNEL_MA35_6_6_VERSION),y)
+LINUX_TARBALL = $(call github,OpenNuvoton,MA35D1_linux-6.6.y,$(call qstrip,$(BR2_TARGET_KERNEL_MA35_VERSION)))/MA35D1_linux-6.6.y-$(call qstrip,$(BR2_TARGET_KERNEL_MA35_VERSION)).tar.gz
+LINUX_SITE = $(patsubst %/,%,$(dir $(LINUX_TARBALL)))
+LINUX_SOURCE = $(notdir $(LINUX_TARBALL))
+else ifeq ($(BR2_LINUX_KERNEL_MA35_6_6_RT_VERSION),y)
 LINUX_TARBALL = $(call github,OpenNuvoton,MA35D1_linux-6.6.y,$(call qstrip,$(BR2_TARGET_KERNEL_MA35_VERSION)))/MA35D1_linux-6.6.y-$(call qstrip,$(BR2_TARGET_KERNEL_MA35_VERSION)).tar.gz
 LINUX_SITE = $(patsubst %/,%,$(dir $(LINUX_TARBALL)))
 LINUX_SOURCE = $(notdir $(LINUX_TARBALL))
@@ -285,6 +293,14 @@ define LINUX_APPLY_LOCAL_PATCHES
 			$(APPLY_PATCHES) $(@D) `dirname $$p` `basename $$p` || exit 1; \
 		fi \
 	done
+
+endef
+
+#LINUX_POST_PATCH_HOOKS += LINUX_MA35D1_APPLY_PATCHES
+
+define LINUX_RT_APPLY_PATCHES
+	$(if $(BR2_LINUX_KERNEL_MA35_5_10_RT_VERSION),$(APPLY_PATCHES) $(LINUX_DIR) $(TOPDIR)/linux/5.10.140-rt)
+	$(if $(BR2_LINUX_KERNEL_MA35_6_6_RT_VERSION),$(APPLY_PATCHES) $(LINUX_DIR) $(TOPDIR)/linux/6.6.93-rt)
 endef
 
 ifeq ($(BR2_LINUX_KERNEL_VMLINUX),y)
@@ -399,6 +415,8 @@ define LINUX_KCONFIG_FIXUP_CMDS_ROOTFS_CPIO
 	$(call KCONFIG_SET_OPT,CONFIG_INITRAMFS_ROOT_GID,0)
 endef
 endif
+
+LINUX_POST_PATCH_HOOKS += LINUX_RT_APPLY_PATCHES
 
 define LINUX_KCONFIG_FIXUP_CMDS
 	@$(call MESSAGE,"Updating kernel config with fixups")
