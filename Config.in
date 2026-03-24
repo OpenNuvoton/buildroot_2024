@@ -128,6 +128,11 @@ config BR2_NUVOTON_NUC9X0
 
 endchoice
 
+if BR2_NUVOTON_MA35D1
+config BR2_NUVOTON_MA35D1_D0
+	bool "MA35D1D0"
+endif
+
 menu "Commands"
 
 config BR2_WGET

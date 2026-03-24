@@ -67,6 +67,8 @@ ddr_size()
 {
 	if grep -Eq "^TFA_CPU800_CUSTOM_DDR=y" ${BR2_CONFIG}; then
 		echo $(sed -n -e 's/^TFA_CUSTOM_DDR_SIZE=/ /p' ${BR2_CONFIG} | sed 's/M/ /g' | sed 's/\"/ /g' | sed '/^$/d')
+	elif grep -Eq "^TFA_CPU650_CUSTOM_DDR=y" ${BR2_CONFIG}; then
+		echo $(sed -n -e 's/^TFA_CUSTOM_DDR_SIZE=/ /p' ${BR2_CONFIG} | sed 's/M/ /g' | sed 's/\"/ /g' | sed '/^$/d')
 	else
 		echo "0x8000000"
 	fi
@@ -350,6 +352,12 @@ uboot_cmd() {
 			fi
 			sed -i "s/kernelmem=256M/kernelmem=$DDR_SIZE\M/1" ${BINARIES_DIR}/uboot-env.txt
 	elif grep -Eq "^TFA_CPU1G_CUSTOM_DDR=y$" ${BR2_CONFIG}; then
+			if [[ $IS_OPTEE == "yes" ]]
+			then
+				DDR_SIZE=$(($DDR_SIZE-8))
+			fi
+			sed -i "s/kernelmem=256M/kernelmem=$DDR_SIZE\M/1" ${BINARIES_DIR}/uboot-env.txt
+	elif grep -Eq "^TFA_CPU650_CUSTOM_DDR=y$" ${BR2_CONFIG}; then
 			if [[ $IS_OPTEE == "yes" ]]
 			then
 				DDR_SIZE=$(($DDR_SIZE-8))

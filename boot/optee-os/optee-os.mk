@@ -22,6 +22,11 @@ OPTEE_OS_TARBALL = $(call github,OpenNuvoton,optee_os_ma35,$(OPTEE_OS_VERSION))/
 OPTEE_OS_SITE = $(patsubst %/,%,$(dir $(OPTEE_OS_TARBALL)))
 OPTEE_OS_SOURCE = $(notdir $(OPTEE_OS_TARBALL))
 BR_NO_CHECK_HASH_FOR += $(OPTEE_OS_SOURCE)
+else ifeq ($(BR2_TARGET_OPTEE_OS_MA35D1D0_TARBALL),y)
+OPTEE_OS_TARBALL = $(call github,OpenNuvoton,optee_os_ma35,$(OPTEE_OS_VERSION))/optee_os_ma35-$(OPTEE_OS_VERSION).tar.gz
+OPTEE_OS_SITE = $(patsubst %/,%,$(dir $(OPTEE_OS_TARBALL)))
+OPTEE_OS_SOURCE = $(notdir $(OPTEE_OS_TARBALL))
+BR_NO_CHECK_HASH_FOR += $(OPTEE_OS_SOURCE)
 else ifeq ($(BR2_TARGET_OPTEE_OS_MA35D0_TARBALL),y)
 OPTEE_OS_TARBALL = $(call github,OpenNuvoton,optee_os_ma35,$(OPTEE_OS_VERSION))/optee_os_ma35-$(OPTEE_OS_VERSION).tar.gz
 OPTEE_OS_SITE = $(patsubst %/,%,$(dir $(OPTEE_OS_TARBALL)))
@@ -85,7 +90,11 @@ endif
 # variables
 OPTEE_OS_MAKE_OPTS += PLATFORM=$(call qstrip,$(BR2_TARGET_OPTEE_OS_PLATFORM))
 ifneq ($(call qstrip,$(BR2_TARGET_OPTEE_OS_PLATFORM_FLAVOR)),)
+ifeq ($(BR2_NUVOTON_MA35D1_D0),y)
+OPTEE_OS_MAKE_OPTS += PLATFORM_FLAVOR=$(call qstrip,"MA35D1")
+else
 OPTEE_OS_MAKE_OPTS += PLATFORM_FLAVOR=$(call qstrip,$(BR2_TARGET_OPTEE_OS_PLATFORM_FLAVOR))
+endif
 endif
 OPTEE_OS_MAKE_OPTS += $(call qstrip,$(BR2_TARGET_OPTEE_OS_ADDITIONAL_VARIABLES))
 

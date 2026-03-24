@@ -88,6 +88,7 @@ endif
 
 if BR2_NUVOTON_MA35D1
 
+if !BR2_NUVOTON_MA35D1_D0
 choice
         prompt "MA35D1 PMIC Select"
 config TFA_MA35D1_PMIC_0
@@ -169,9 +170,55 @@ config BR2_TARGET_ARM_TRUSTED_FIRMWARE_INTREE_DTS_NAME
 		- ma35d1-cpu800-custom-ddr
 		- ma35d1-cpu1g-custom-ddr
 
-if (TFA_CPU800_CUSTOM_DDR || TFA_CPU1G_CUSTOM_DDR)
+endif
+
+if BR2_NUVOTON_MA35D1_D0
+
+choice
+	prompt "MA35D0 PMIC Select"
+config TFA_MA35D1D0_PMIC_0
+        bool "No PMIC"
+config TFA_MA35D1D0_PMIC_1
+        bool "DIALOG PMIC"
+config TFA_MA35D1D0_PMIC_2
+        bool "IP6103 PMIC"
+config TFA_MA35D1D0_PMIC_3
+        bool "APW7704F PMIC"
+endchoice
+
+if ! TFA_MA35D1D0_PMIC_0
+config TFA_MA35D1D0_CPU_CORE_POWER
+        int "MA35D0 CPU Core Power"
+        default 128
+        help
+          The cpu core power voltage
+          decimal integer value.
+          125 = 1.25V, 120 = 1.20V,
+          1xx = 1.xxV, etc.
+endif
+
+choice
+        prompt "In-tree Device Tree Source file names"
+config TFA_CPU650_CUSTOM_DDR
+        bool "ma35d0-cpu650-custom-ddr"
+endchoice
+
+config BR2_TARGET_ARM_TRUSTED_FIRMWARE_INTREE_DTS_NAME
+        string
+        default "ma35d0-cpu650-custom-ddr" if TFA_CPU650_CUSTOM_DDR
+        help
+          Name of in-tree device tree source file, without
+          the trailing .dts. You can provide a list of
+          dts files to build, separated by spaces.
+
+          The currently provided device tree of TF-A are as follows:
+                - ma35d0-cpu650-custom-ddr
+
+endif
+
+if (TFA_CPU800_CUSTOM_DDR || TFA_CPU1G_CUSTOM_DDR || TFA_CPU650_CUSTOM_DDR)
 config BR2_TARGET_ARM_TRUSTED_FIRMWARE_CUSTOM_DDR
-	string "Custom DDR header file in board/nuvoton/ma35d1/ddr"
+	string "Custom DDR header file"
 	default "custom_ddr.h"
 
 config TFA_CUSTOM_DDR_SIZE
