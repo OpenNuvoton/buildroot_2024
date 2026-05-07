@@ -175,7 +175,7 @@ endif
 if BR2_NUVOTON_MA35D1_D0
 
 choice
-	prompt "MA35D0 PMIC Select"
+	prompt "MA35D05K PMIC Select"
 config TFA_MA35D1D0_PMIC_0
         bool "No PMIC"
 config TFA_MA35D1D0_PMIC_1
@@ -188,7 +188,7 @@ endchoice
 
 if ! TFA_MA35D1D0_PMIC_0
 config TFA_MA35D1D0_CPU_CORE_POWER
-        int "MA35D0 CPU Core Power"
+        int "MA35D05K CPU Core Power"
         default 128
         help
           The cpu core power voltage
@@ -200,12 +200,12 @@ endif
 choice
         prompt "In-tree Device Tree Source file names"
 config TFA_CPU650_CUSTOM_DDR
-        bool "ma35d0-cpu650-custom-ddr"
+        bool "ma35d05k-cpu650-custom-ddr"
 endchoice
 
 config BR2_TARGET_ARM_TRUSTED_FIRMWARE_INTREE_DTS_NAME
         string
-        default "ma35d0-cpu650-custom-ddr" if TFA_CPU650_CUSTOM_DDR
+        default "ma35d05k-cpu650-custom-ddr" if TFA_CPU650_CUSTOM_DDR
         help
           Name of in-tree device tree source file, without
           the trailing .dts. You can provide a list of

@@ -40,7 +40,7 @@ config BR2_TARGET_OPTEE_OS_MA35H0_TARBALL
           Use a custom version fetched from a tarball.
 
 config BR2_TARGET_OPTEE_OS_MA35D1D0_TARBALL
-	bool "MA35D0 tarball"
+	bool "MA35D05K tarball"
 	depends on BR2_NUVOTON_MA35D1_D0
 	help
 	  Use a custom version fetched from a tarball.
