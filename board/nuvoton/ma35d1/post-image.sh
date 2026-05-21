@@ -421,6 +421,9 @@ uboot_cmd() {
 	if echo ${MACHINE} | grep -q "iot"
 	then
 		sed -i "s/mmc_block=mmcblk1p1/mmc_block=mmcblk0p1/1" ${BINARIES_DIR}/uboot-env.txt
+		if grep -Eq '^BR2_TARGET_UBOOT_BOARD_DEFCONFIG="?ma35d05k_spinand"?$' "${BR2_CONFIG}"; then
+			sed -i "s/spinand_ubiblock=9/spinand_ubiblock=4/1" ${BINARIES_DIR}/uboot-env.txt
+		fi
 	fi
 
 	${HOST_DIR}/bin/mkenvimage ${ENVOPT} -o ${BINARIES_DIR}/uboot-env.bin ${BINARIES_DIR}/uboot-env.txt
