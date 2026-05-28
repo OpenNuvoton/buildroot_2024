@@ -90,6 +90,11 @@ config BR2_LINUX_KERNEL_MA35
 	help
 	  linux kernel for ma35d1/ma35d0/ma35h0
 
+config BR2_LINUX_KERNEL_NUC980
+	bool "Nuvoton NUC980"
+	help
+	  linux kernel for NUC980
+
 config BR2_LINUX_KERNEL_CUSTOM_GIT
 	bool "Custom Git repository"
 	help
@@ -131,9 +136,31 @@ config BR2_LINUX_KERNEL_MA35_6_6_RT_VERSION
 	select BR2_TOOLCHAIN_HEADERS_AT_LEAST_6_6
 endchoice
 
+
+choice
+	prompt "NUC980 Version"
+	depends on BR2_LINUX_KERNEL_NUC980
+
+config BR2_LINUX_KERNEL_NUC980_5_10_VERSION
+	bool "Kernel 5.10"
+	select BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_10
+
+config BR2_LINUX_KERNEL_NUC980_6_6_VERSION
+	bool "Kernel 6.6"
+	select BR2_TOOLCHAIN_HEADERS_AT_LEAST_6_6
+endchoice
+
 config BR2_TARGET_KERNEL_MA35_VERSION
         string "Custom repository version"
 	depends on BR2_LINUX_KERNEL_MA35
+        default "master"
+        help
+	  This option allows Buildroot to get the Linux kernel source
+          code from a git repository.
+
+config BR2_TARGET_KERNEL_NUC980_VERSION
+        string "Custom repository version"
+	depends on BR2_LINUX_KERNEL_NUC980
         default "master"
         help
 	  This option allows Buildroot to get the Linux kernel source
