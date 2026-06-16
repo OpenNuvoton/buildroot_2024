@@ -217,6 +217,24 @@ config BR2_TARGET_ARM_TRUSTED_FIRMWARE_INTREE_DTS_NAME
 endif
 
 if (TFA_CPU800_CUSTOM_DDR || TFA_CPU1G_CUSTOM_DDR || TFA_CPU650_CUSTOM_DDR)
+config BR2_TARGET_DDR_AUTO_DETECT
+        bool "MA35 DDR Auto Detect"
+        help
+		  ARM Trusted Firmware can automatically detect the chip PID and
+		  initialize the corresponding DDR parameters based on the detected PID.
+
+		  The supported built-in DDR configurations include:
+		  - MA35D16A887C
+		  - MA35D16AI87C
+		  - MA35D16AJ87C
+		  - MA35D16F887C
+		  - MA35D16F987C
+		  - MA35D16FI87C
+		  - MA35D16FJ87C
+
+		  If no matching PID is found, the firmware falls back to the custom DDR
+		  configuration.
+
 config BR2_TARGET_ARM_TRUSTED_FIRMWARE_CUSTOM_DDR
 	string "Custom DDR header file"
 	default "custom_ddr.h"
