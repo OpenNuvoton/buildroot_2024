@@ -235,6 +235,29 @@ config BR2_TARGET_ARM_TRUSTED_FIRMWARE_INTREE_DTS_NAME
 endif
 
 if (TFA_CPU800_CUSTOM_DDR || TFA_CPU1G_CUSTOM_DDR || TFA_CPU650_CUSTOM_DDR)
+config BR2_TARGET_OTP_ANTI_ROLLBACK
+        bool "MA35 OTP Anti-Rollback Protection"
+        help
+		  Enable BL2 firmware anti-rollback protection based on the MA35
+		  OTP secure-region fuse counter.
+
+		  When enabled, BL2 compares its build-time firmware version
+		  counter (MA35D1_BL2_FW_VERSION_COUNT) against the counter
+		  recorded in OTP fuses at boot time, and blows additional OTP
+		  fuses to record the current version. Booting an older
+		  (rolled-back) BL2 image will then be rejected.
+
+		  Note: OTP fuses can only be blown (0 -> 1), never reset. Each
+		  firmware version bump permanently consumes part of a limited,
+		  one-time budget (704 bits over the life of the chip). Only
+		  enable this if your product requires anti-rollback protection
+		  and you understand this limitation.
+
+		  Currently supported: MA35D1, MA35D05K.
+		  Not yet supported: MA35D0, MA35H0.
+
+		  Default: disabled (n).
+
 config BR2_TARGET_DDR_AUTO_DETECT
         bool "MA35 DDR Auto Detect"
         help
