@@ -10,7 +10,7 @@ if grep -Eq "^BR2_LINUX_KERNEL_MA35_6_6_VERSION=y$" ${BR2_CONFIG}; then
 fi
 
 RESIZE_FILE=${TARGET_DIR}/etc/init.d/S50resize
-cp $MODULES_DIR/../../resize.sh ${TARGET_DIR}/etc/
+cp board/nuvoton/ma35h0/resize.sh ${TARGET_DIR}/etc/
 if [ -f ${RESIZE_FILE} ]; then
         rm ${RESIZE_FILE}
 fi
@@ -23,10 +23,13 @@ if grep -Eq "^BR2_MA35H0_RESIZE_SD_MAX=y$" ${BR2_CONFIG}; then
 fi
 
 if grep -Eq "^BR2_PACKAGE_BUSYBOX=y$" ${BR2_CONFIG}; then
-	install -d -m 755 ${MODULES_TARGET_TDIR}
-	cp ${MODULES_DIR}/*.ko ${MODULES_TDIR}/
+	install -d -m 755 ${MODULES_TDIR}
+	for module in ${MODULES_DIR}/*.ko; do
+		[ -e "${module}" ] || continue
+		cp "${module}" "${MODULES_TDIR}/"
+	done
 	if grep -Eq "^BR2_LINUX_KERNEL_MA35_6_6_VERSION=y$" ${BR2_CONFIG}; then
-		cp ${MODULES_DIR}/../6.6.93_modules.sh ${TARGET_DIR}/etc/profile.d/modules.sh
+		cp board/nuvoton/ma35h0/modules/6.6.93_modules.sh ${TARGET_DIR}/etc/profile.d/modules.sh
 	else
 		install -d -m 755 ${GFXDRIVERS_TDIR}
 		cp ${MODULES_DIR}/../libdirectfb_gal.so ${GFXDRIVERS_TDIR}/
