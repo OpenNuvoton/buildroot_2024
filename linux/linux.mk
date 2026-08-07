@@ -52,6 +52,14 @@ else ifeq ($(BR2_LINUX_KERNEL_MA35_6_6_RT_VERSION),y)
 LINUX_TARBALL = $(call github,OpenNuvoton,MA35D1_linux-6.6.y,$(call qstrip,$(BR2_TARGET_KERNEL_MA35_VERSION)))/MA35D1_linux-6.6.y-$(call qstrip,$(BR2_TARGET_KERNEL_MA35_VERSION)).tar.gz
 LINUX_SITE = $(patsubst %/,%,$(dir $(LINUX_TARBALL)))
 LINUX_SOURCE = $(notdir $(LINUX_TARBALL))
+else ifeq ($(BR2_LINUX_KERNEL_MA35_6_12_VERSION),y)
+LINUX_TARBALL = $(call github,OpenNuvoton,MA35D1_linux-6.12.y-cip,$(call qstrip,$(BR2_TARGET_KERNEL_MA35_VERSION)))/MA35D1_linux-6.12.y-cip-$(call qstrip,$(BR2_TARGET_KERNEL_MA35_VERSION)).tar.gz
+LINUX_SITE = $(patsubst %/,%,$(dir $(LINUX_TARBALL)))
+LINUX_SOURCE = $(notdir $(LINUX_TARBALL))
+else ifeq ($(BR2_LINUX_KERNEL_MA35_6_18_VERSION),y)
+LINUX_TARBALL = $(call github,OpenNuvoton,MA35D1_linux-6.18.y,$(call qstrip,$(BR2_TARGET_KERNEL_MA35_VERSION)))/MA35D1_linux-6.18.y-$(call qstrip,$(BR2_TARGET_KERNEL_MA35_VERSION)).tar.gz
+LINUX_SITE = $(patsubst %/,%,$(dir $(LINUX_TARBALL)))
+LINUX_SOURCE = $(notdir $(LINUX_TARBALL))
 else ifeq ($(BR2_LINUX_KERNEL_CUSTOM_GIT),y)
 LINUX_SITE = $(call qstrip,$(BR2_LINUX_KERNEL_CUSTOM_REPO_URL))
 LINUX_SITE_METHOD = git

@@ -24,7 +24,7 @@ spinand_ubiblock=9
 nand_ubiblock=4
 spinor_bootargs=root=/dev/mmcblk0p1 rootfstype=ext4
 spinor_boot=sf probe 0 18000000; sf read ${kernel_addr_r} kernel; sf read ${fdt_addr_r} device-tree;
-mmcboot=if mmc dev 0; then echo "Booting form mmc ... ..."; setenv bootargs root=/dev/${mmc_block} rootfstype=ext4 rw rootwait console=ttyS0,115200n8 rdinit=/sbin/init mem=${kernelmem}; mmc read ${kernel_addr_r} 0x1800 0x8000; mmc read ${fdt_addr_r} 0x1600 0x80; booti ${kernel_addr_r} - ${fdt_addr_r}; fi;
+mmcboot=if mmc dev 0; then echo "Booting form mmc ... ..."; setenv bootargs root=/dev/${mmc_block} rootfstype=ext4 rw rootwait console=ttyS0,115200n8 rdinit=/sbin/init mem=${kernelmem}; mmc read ${kernel_addr_r} 0x1800 0xf000; mmc read ${fdt_addr_r} 0x1600 0x80; booti ${kernel_addr_r} - ${fdt_addr_r}; fi;
 nandboot=if test ${mtdids} = 'nand0=nand0' ; then echo "Booting from nand ... ..."; setenv bootargs noinitrd ubi.mtd=${nand_ubiblock} root=ubi0:rootfs rootfstype=ubifs rw rootwait=1 console=ttyS0,115200n8 rdinit=/sbin/init mem=${kernelmem}; nand read ${kernel_addr_r} kernel; nand read ${fdt_addr_r} device-tree; booti ${kernel_addr_r} - ${fdt_addr_r} ; fi
 spinandboot=if test ${mtdids} = 'spi-nand0=spi-nand0' ; then echo "Booting from spinand ... ..."; mtd list; setenv bootargs noinitrd ubi.mtd=${spinand_ubiblock} root=ubi0:rootfs rootfstype=ubifs rw rootwait=1 console=ttyS0,115200n8 rdinit=/sbin/init mem=${kernelmem}; mtd read kernel ${kernel_addr_r}; mtd read device-tree ${fdt_addr_r}; booti ${kernel_addr_r} - ${fdt_addr_r}; fi
 mmc_boot=if mmc dev ${devnum}; then devtype=mmc; run scan_dev_for_boot_part; fi
