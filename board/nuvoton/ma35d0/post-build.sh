@@ -23,20 +23,25 @@ if grep -Eq "^BR2_MA35D0_RESIZE_SD_MAX=y$" ${BR2_CONFIG}; then
 fi
 
 if grep -Eq "^BR2_PACKAGE_BUSYBOX=y$" ${BR2_CONFIG}; then
-	install -d -m 755 ${MODULES_TDIR}
-	for module in ${MODULES_DIR}/*.ko; do
-		[ -e "${module}" ] || continue
-		cp "${module}" "${MODULES_TDIR}/"
-	done
-	if grep -Eq "^BR2_LINUX_KERNEL_MA35_6_6_VERSION=y$" ${BR2_CONFIG}; then
-		cp board/nuvoton/ma35d0/modules/6.6.93_modules.sh ${TARGET_DIR}/etc/profile.d/modules.sh
+	if grep -Eq "^BR2_LINUX_KERNEL_MA35_6_12_VERSION=y$|^BR2_LINUX_KERNEL_MA35_6_18_VERSION=y$" ${BR2_CONFIG}; then
+		: # VC8000/DC/GPU drivers are fully built into the 6.12/6.18 kernel;
+		  # no legacy .ko modules or insmod scripts are needed.
 	else
-		install -d -m 755 ${GFXDRIVERS_TDIR}
-		cp ${MODULES_DIR}/../libdirectfb_gal.so ${GFXDRIVERS_TDIR}/
-		cp ${MODULES_DIR}/../libGAL.so ${TARGET_DIR}/usr/lib/
-		cp ${MODULES_DIR}/../modules.sh ${TARGET_DIR}/etc/profile.d/
-		if grep -Eq "^BR2_TARGET_KERNEL_DRM_MA35_VERSION=y$" ${BR2_CONFIG}; then
-			sed -i '1d' ${TARGET_DIR}/etc/profile.d/modules.sh
+		install -d -m 755 ${MODULES_TDIR}
+		for module in ${MODULES_DIR}/*.ko; do
+			[ -e "${module}" ] || continue
+			cp "${module}" "${MODULES_TDIR}/"
+		done
+		if grep -Eq "^BR2_LINUX_KERNEL_MA35_6_6_VERSION=y$" ${BR2_CONFIG}; then
+			cp board/nuvoton/ma35d0/modules/6.6.93_modules.sh ${TARGET_DIR}/etc/profile.d/modules.sh
+		else
+			install -d -m 755 ${GFXDRIVERS_TDIR}
+			cp ${MODULES_DIR}/../libdirectfb_gal.so ${GFXDRIVERS_TDIR}/
+			cp ${MODULES_DIR}/../libGAL.so ${TARGET_DIR}/usr/lib/
+			cp ${MODULES_DIR}/../modules.sh ${TARGET_DIR}/etc/profile.d/
+			if grep -Eq "^BR2_TARGET_KERNEL_DRM_MA35_VERSION=y$" ${BR2_CONFIG}; then
+				sed -i '1d' ${TARGET_DIR}/etc/profile.d/modules.sh
+			fi
 		fi
 	fi
 fi
