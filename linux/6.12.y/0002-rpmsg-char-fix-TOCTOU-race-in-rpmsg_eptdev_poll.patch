@@ -1,0 +1,29 @@
+From f1967c9ca72a4e3b3f875eeba406e205e6822c3a Mon Sep 17 00:00:00 2001
+From: yclu4 <yclu4@nuvoton.com>
+Date: Thu, 20 Aug 2026 11:13:10 +0800
+Subject: [PATCH] rpmsg: char: fix TOCTOU race in rpmsg_eptdev_poll()
+
+---
+ drivers/rpmsg/rpmsg_char.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/rpmsg/rpmsg_char.c b/drivers/rpmsg/rpmsg_char.c
+index 96fcdd2..5eabec6 100644
+--- a/drivers/rpmsg/rpmsg_char.c
++++ b/drivers/rpmsg/rpmsg_char.c
+@@ -297,5 +297,2 @@ static __poll_t rpmsg_eptdev_poll(struct file *filp, poll_table *wait)
+ 
+-	if (!eptdev->ept)
+-		return EPOLLERR;
+-
+ 	poll_wait(filp, &eptdev->readq, wait);
+@@ -309,2 +306,6 @@ static __poll_t rpmsg_eptdev_poll(struct file *filp, poll_table *wait)
+ 	mutex_lock(&eptdev->ept_lock);
++	if (!eptdev->ept) {
++		mutex_unlock(&eptdev->ept_lock);
++		return EPOLLERR;
++	}
+ 	mask |= rpmsg_poll(eptdev->ept, filp, wait);
+-- 
+2.43.0
+
