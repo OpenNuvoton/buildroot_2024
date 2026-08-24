@@ -319,6 +319,21 @@ config BR2_TARGET_ARM_TRUSTED_FIRMWARE_INTREE_DTS_NAME
 		- ma35d0-cpu650-custom-ddr
 
 if (TFA_MA35D0_CPU650_CUSTOM_DDR)
+config BR2_TARGET_DDR_AUTO_DETECT
+        bool "MA35 DDR Auto Detect"
+        help
+		  ARM Trusted Firmware can automatically detect the chip PID and
+		  initialize the corresponding DDR parameters based on the detected PID.
+
+		  The supported built-in DDR configurations include:
+		  - MA35D03F764C
+		  - MA35D03F864C
+		  - MA35D03FH64C
+		  - MA35D03FI64C
+
+		  If no matching PID is found, the firmware falls back to the custom DDR
+		  configuration.
+
 config BR2_TARGET_ARM_TRUSTED_FIRMWARE_CUSTOM_DDR
 	string "Custom DDR header file in board/nuvoton/ma35d0/ddr"
 	default "custom_ddr.h"
@@ -349,6 +364,19 @@ choice
 config TFA_MA35H0_CPU650_CUSTOM_DDR
         bool "ma35h0-cpu650-custom-ddr"
 endchoice
+
+config BR2_TARGET_DDR_AUTO_DETECT
+        bool "MA35 DDR Auto Detect"
+        help
+		  ARM Trusted Firmware can automatically detect the chip PID and
+		  initialize the corresponding DDR parameters based on the detected PID.
+
+		  The supported built-in DDR configurations include:
+		  - MA35H04F764C
+		  - MA35H04FH64C
+
+		  If no matching PID is found, the firmware falls back to the custom DDR
+		  configuration.
 
 config BR2_TARGET_ARM_TRUSTED_FIRMWARE_INTREE_DTS_NAME
 	string
