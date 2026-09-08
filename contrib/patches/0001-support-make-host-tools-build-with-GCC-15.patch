@@ -1,0 +1,231 @@
+From 30965eac921f4b469d30d9e86e658e7268840783 Mon Sep 17 00:00:00 2001
+From: Jacky Huang <ychuang3@nuvoton.com>
+Date: Tue, 8 Sep 2026 04:26:08 +0000
+Subject: [PATCH] support: make host tools build with GCC 15
+
+GCC 15 defaults to GNU C23, exposing incompatibilities in the older host-side
+tools bundled by this Buildroot tree. Keep the existing compiler behavior on
+older toolchains and select GNU C17 only for affected host packages when the
+host compiler is GCC 15 or newer.
+
+The compatibility handling covers m4, e2fsprogs, gawk, gmp, dtc, gdb, and
+parted. It also fixes the missing open_temp_exec_file declaration in libffi
+and adds the missing cstdint include in CMake's bundled cmcppdap network
+header. Update the kconfig ncurses probe to use a C-standard-conforming
+main definition so menuconfig works with modern GCC.
+
+Validated by rebuilding the affected host packages on GCC 15, exercising
+the installed gawk, GMP, DTC, libffi, parted, and GDB tools, and checking
+the compiler-version condition for GCC 9 through GCC 16.
+
+Change-Id: I44b3ac134054a4af0cf9f29d171d390664410d59
+---
+ ...ap-include-cstdint-in-network-header.patch | 21 +++++++++++++++
+ package/dtc/dtc.mk                            |  9 ++++++-
+ package/e2fsprogs/e2fsprogs.mk                |  5 ++++
+ package/gawk/gawk.mk                          |  5 ++++
+ package/gdb/gdb.mk                            |  5 ++++
+ package/gmp/gmp.mk                            |  5 ++++
+ ...-open_temp_exec_file-in-tramp-header.patch | 26 +++++++++++++++++++
+ package/m4/m4.mk                              |  5 ++++
+ package/parted/parted.mk                      |  6 +++++
+ support/kconfig/lxdialog/check-lxdialog.sh    |  2 +-
+ 10 files changed, 87 insertions(+), 2 deletions(-)
+ create mode 100644 package/cmake/0002-cmcppdap-include-cstdint-in-network-header.patch
+ create mode 100644 package/libffi/0004-Declare-open_temp_exec_file-in-tramp-header.patch
+
+diff --git a/package/cmake/0002-cmcppdap-include-cstdint-in-network-header.patch b/package/cmake/0002-cmcppdap-include-cstdint-in-network-header.patch
+new file mode 100644
+index 00000000..47412894
+--- /dev/null
++++ b/package/cmake/0002-cmcppdap-include-cstdint-in-network-header.patch
+@@ -0,0 +1,21 @@
++From: Jacky Huang <ychuang3@nuvoton.com>
++Subject: [PATCH] cmcppdap: include cstdint in the network header
++
++network.h uses uint32_t but relies on other standard headers to provide
++its declaration indirectly. Include cstdint explicitly so the header
++also builds with newer libstdc++ versions.
++
++Signed-off-by: Jacky Huang <ychuang3@nuvoton.com>
++---
++ Utilities/cmcppdap/include/dap/network.h | 1 +
++ 1 file changed, 1 insertion(+)
++
++diff --git a/Utilities/cmcppdap/include/dap/network.h b/Utilities/cmcppdap/include/dap/network.h
++--- a/Utilities/cmcppdap/include/dap/network.h
+++++ b/Utilities/cmcppdap/include/dap/network.h
++@@ -15,6 +15,7 @@
++ #ifndef dap_network_h
++ #define dap_network_h
+++#include <cstdint>
++ #include <functional>
++ #include <memory>
+diff --git a/package/dtc/dtc.mk b/package/dtc/dtc.mk
+index 5868ae0e..bd30bd5e 100644
+--- a/package/dtc/dtc.mk
++++ b/package/dtc/dtc.mk
+@@ -67,8 +67,15 @@ define DTC_INSTALL_TARGET_CMDS
+ endef
+ 
+ # host build
++HOST_DTC_EXTRA_CFLAGS = $(HOST_CFLAGS) -fPIC
++
++# GCC 15's C23 mode preserves const in string searches, breaking this release.
++ifeq ($(shell test "$$($(HOSTCC_NOCCACHE) -dumpversion | cut -d. -f1)" -ge 15 && echo y),y)
++HOST_DTC_EXTRA_CFLAGS += -std=gnu17
++endif
++
+ define HOST_DTC_BUILD_CMDS
+-	$(HOST_CONFIGURE_OPTS) $(MAKE) EXTRA_CFLAGS="$(HOST_CFLAGS) -fPIC" -C $(@D) $(HOST_DTC_MAKE_OPTS)
++	$(HOST_CONFIGURE_OPTS) $(MAKE) EXTRA_CFLAGS="$(HOST_DTC_EXTRA_CFLAGS)" -C $(@D) $(HOST_DTC_MAKE_OPTS)
+ endef
+ 
+ define HOST_DTC_INSTALL_CMDS
+diff --git a/package/e2fsprogs/e2fsprogs.mk b/package/e2fsprogs/e2fsprogs.mk
+index cbaac4f4..32003b69 100644
+--- a/package/e2fsprogs/e2fsprogs.mk
++++ b/package/e2fsprogs/e2fsprogs.mk
+@@ -76,6 +76,11 @@ E2FSPROGS_CONF_ENV += ac_cv_path_LDCONFIG=true
+ 
+ HOST_E2FSPROGS_CONF_ENV += ac_cv_path_LDCONFIG=true
+ 
++# GCC 15 defaults to C23, where lib/ext2fs/tdb.c's bool typedef is invalid.
++ifeq ($(shell test "$$($(HOSTCC_NOCCACHE) -dumpversion | cut -d. -f1)" -ge 15 && echo y),y)
++HOST_E2FSPROGS_CONF_ENV += CFLAGS="$(HOST_CFLAGS) -std=gnu17"
++endif
++
+ E2FSPROGS_INSTALL_STAGING_OPTS = \
+ 	DESTDIR=$(STAGING_DIR) \
+ 	install-libs
+diff --git a/package/gawk/gawk.mk b/package/gawk/gawk.mk
+index ff1b9920..a8f03a5f 100644
+--- a/package/gawk/gawk.mk
++++ b/package/gawk/gawk.mk
+@@ -33,6 +33,11 @@ endif
+ 
+ HOST_GAWK_CONF_OPTS = --without-readline --without-mpfr
+ 
++# GCC 15 defaults to C23, which changes the meaning of io.c's () casts.
++ifeq ($(shell test "$$($(HOSTCC_NOCCACHE) -dumpversion | cut -d. -f1)" -ge 15 && echo y),y)
++HOST_GAWK_CONF_ENV += CFLAGS="$(HOST_CFLAGS) -std=gnu17"
++endif
++
+ define GAWK_CREATE_SYMLINK
+ 	ln -sf gawk $(TARGET_DIR)/usr/bin/awk
+ endef
+diff --git a/package/gdb/gdb.mk b/package/gdb/gdb.mk
+index 141fcfc0..10a9f90b 100644
+--- a/package/gdb/gdb.mk
++++ b/package/gdb/gdb.mk
+@@ -247,6 +247,11 @@ ifeq ($(BR2_PACKAGE_GDB_SERVER),y)
+ GDB_POST_INSTALL_TARGET_HOOKS += GDB_SDK_INSTALL_GDBSERVER
+ endif
+ 
++# GCC 15 defaults to C23, which the bundled C libraries do not support.
++ifeq ($(shell test "$$($(HOSTCC_NOCCACHE) -dumpversion | cut -d. -f1)" -ge 15 && echo y),y)
++HOST_GDB_CONF_ENV += CFLAGS="$(HOST_CFLAGS) -std=gnu17"
++endif
++
+ # A few notes:
+ #  * --target, because we're doing a cross build rather than a real
+ #    host build.
+diff --git a/package/gmp/gmp.mk b/package/gmp/gmp.mk
+index bd401c6a..4cc2814e 100644
+--- a/package/gmp/gmp.mk
++++ b/package/gmp/gmp.mk
+@@ -14,6 +14,11 @@ GMP_CPE_ID_VENDOR = gmplib
+ GMP_DEPENDENCIES = host-m4
+ HOST_GMP_DEPENDENCIES = host-m4
+ 
++# GCC 15 defaults to C23, which rejects configure's old-style test functions.
++ifeq ($(shell test "$$($(HOSTCC_NOCCACHE) -dumpversion | cut -d. -f1)" -ge 15 && echo y),y)
++HOST_GMP_CONF_ENV += CFLAGS="$(HOST_CFLAGS) -std=gnu17"
++endif
++
+ # GMP doesn't support assembly for coldfire or mips r6 ISA yet
+ # Disable for ARM v7m since it has different asm constraints
+ ifeq ($(BR2_m68k_cf)$(BR2_MIPS_CPU_MIPS32R6)$(BR2_MIPS_CPU_MIPS64R6)$(BR2_ARM_CPU_ARMV7M),y)
+diff --git a/package/libffi/0004-Declare-open_temp_exec_file-in-tramp-header.patch b/package/libffi/0004-Declare-open_temp_exec_file-in-tramp-header.patch
+new file mode 100644
+index 00000000..18c65f0a
+--- /dev/null
++++ b/package/libffi/0004-Declare-open_temp_exec_file-in-tramp-header.patch
+@@ -0,0 +1,26 @@
++From: Jacky Huang <ychuang3@nuvoton.com>
++Subject: [PATCH] Declare open_temp_exec_file in the trampoline header
++
++tramp.c calls open_temp_exec_file, which is defined in closures.c, without
++a declaration. Add its matching prototype to their shared internal header
++so compilers rejecting implicit function declarations can build it.
++
++This changes no function implementation or calling convention.
++
++Signed-off-by: Jacky Huang <ychuang3@nuvoton.com>
++---
++ include/tramp.h | 2 ++
++ 1 file changed, 2 insertions(+)
++
++diff --git a/include/tramp.h b/include/tramp.h
++--- a/include/tramp.h
+++++ b/include/tramp.h
++@@ -32,6 +32,8 @@
++ extern "C" {
++ #endif
+++
+++int open_temp_exec_file (void);
++
++ int ffi_tramp_is_supported(void);
++ void *ffi_tramp_alloc (int flags);
++ void ffi_tramp_set_parms (void *tramp, void *data, void *code);
+diff --git a/package/m4/m4.mk b/package/m4/m4.mk
+index 39ad898b..f861ad6e 100644
+--- a/package/m4/m4.mk
++++ b/package/m4/m4.mk
+@@ -10,4 +10,9 @@ M4_SITE = $(BR2_GNU_MIRROR)/m4
+ M4_LICENSE = GPL-3.0+
+ M4_LICENSE_FILES = COPYING
+ 
++# GCC 15 defaults to C23, which the bundled gnulib does not support.
++ifeq ($(shell test "$$($(HOSTCC_NOCCACHE) -dumpversion | cut -d. -f1)" -ge 15 && echo y),y)
++HOST_M4_CONF_ENV += CFLAGS="$(HOST_CFLAGS) -std=gnu17"
++endif
++
+ $(eval $(host-autotools-package))
+diff --git a/package/parted/parted.mk b/package/parted/parted.mk
+index d8afd9d0..0cf8c612 100644
+--- a/package/parted/parted.mk
++++ b/package/parted/parted.mk
+@@ -39,10 +39,16 @@ HOST_PARTED_CONF_OPTS = \
+ 	--disable-nls \
+ 	--without-readline
+ 
++# GCC 15 defaults to C23, which rejects the old-style do_version callback.
++ifeq ($(shell test "$$($(HOSTCC_NOCCACHE) -dumpversion | cut -d. -f1)" -ge 15 && echo y),y)
++HOST_PARTED_CONF_ENV += CFLAGS="$(HOST_CFLAGS) -std=gnu17"
++endif
++
+ define HOST_PARTED_CONFIGURE_CMDS
+ 	(cd $(@D); rm -rf config.cache; \
+ 		$(HOST_CONFIGURE_ARGS) \
+ 		$(HOST_CONFIGURE_OPTS) \
++		$(HOST_PARTED_CONF_ENV) \
+ 		./configure \
+ 		--prefix="$(HOST_DIR)" \
+ 		$(HOST_PARTED_CONF_OPTS) \
+diff --git a/support/kconfig/lxdialog/check-lxdialog.sh b/support/kconfig/lxdialog/check-lxdialog.sh
+index 16cd9a31..8807569b 100755
+--- a/support/kconfig/lxdialog/check-lxdialog.sh
++++ b/support/kconfig/lxdialog/check-lxdialog.sh
+@@ -48,7 +48,7 @@ trap "rm -f $tmp" 0 1 2 3 15
+ check() {
+         $cc -x c - -o $tmp 2>/dev/null <<'EOF'
+ #include CURSES_LOC
+-main() {}
++int main(void) { return 0; }
+ EOF
+ 	if [ $? != 0 ]; then
+ 	    echo " *** Unable to find the ncurses libraries or the"       1>&2
+-- 
+2.53.0
+
