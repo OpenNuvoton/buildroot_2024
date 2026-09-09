@@ -1,0 +1,3375 @@
+{
+  "bomFormat": "CycloneDX",
+  "$schema": "http://cyclonedx.org/schema/bom-1.6.schema.json",
+  "specVersion": "1.6",
+  "metadata": {
+    "component": {
+      "bom-ref": "buildroot",
+      "name": "buildroot",
+      "version": "2024.02",
+      "type": "firmware"
+    },
+    "tools": {
+      "components": [
+        {
+          "type": "application",
+          "name": "Buildroot generate-cyclonedx",
+          "version": "2024.02",
+          "licenses": [
+            {
+              "license": {
+                "id": "GPL-2.0"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "components": [
+    {
+      "bom-ref": "arm-trusted-firmware",
+      "type": "library",
+      "name": "arm-trusted-firmware",
+      "version": "custom",
+      "licenses": [
+        {
+          "license": {
+            "name": "unknown"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://github.com/OpenNuvoton/MA35D1_arm-trusted-firmware-v2.3/archive/master/MA35D1_arm-trusted-firmware-v2.3-master.tar.gz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "target"
+        }
+      ]
+    },
+    {
+      "bom-ref": "busybox",
+      "type": "library",
+      "name": "busybox",
+      "version": "1.36.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "GPL-2.0"
+          }
+        },
+        {
+          "license": {
+            "name": "bzip2-1.0.4"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:busybox:busybox:1.36.1:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://www.busybox.net/downloads/busybox-1.36.1.tar.bz2"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "target"
+        }
+      ]
+    },
+    {
+      "bom-ref": "can-utils",
+      "type": "library",
+      "name": "can-utils",
+      "version": "2023.03",
+      "licenses": [
+        {
+          "license": {
+            "name": "BSD-3-Clause or GPL-2.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://github.com/linux-can/can-utils/archive/v2023.03/can-utils-2023.03.tar.gz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "target"
+        }
+      ]
+    },
+    {
+      "bom-ref": "e2fsprogs",
+      "type": "library",
+      "name": "e2fsprogs",
+      "version": "1.47.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "GPL-2.0"
+          }
+        },
+        {
+          "license": {
+            "name": "MIT-like with advertising clause (libss and libet)"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:e2fsprogs_project:e2fsprogs:1.47.0:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://cdn.kernel.org/pub/linux/kernel/people/tytso/e2fsprogs/v1.47.0/e2fsprogs-1.47.0.tar.xz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "target"
+        }
+      ]
+    },
+    {
+      "bom-ref": "expat",
+      "type": "library",
+      "name": "expat",
+      "version": "2.6.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:libexpat_project:libexpat:2.6.1:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "http://downloads.sourceforge.net/project/expat/expat/2.6.1/expat-2.6.1.tar.xz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "target"
+        }
+      ]
+    },
+    {
+      "bom-ref": "gcc-final",
+      "type": "library",
+      "name": "gcc-final",
+      "version": "12.3.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "GPL-3.0-with-GCC-exception"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "http://ftpmirror.gnu.org/gcc/gcc-12.3.0/gcc-12.3.0.tar.xz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "target"
+        }
+      ]
+    },
+    {
+      "bom-ref": "glibc",
+      "type": "library",
+      "name": "glibc",
+      "version": "2.38-44-gd37c2b20a4787463d192b32041c3406c2bd91de0",
+      "licenses": [
+        {
+          "license": {
+            "name": "GPL-2.0+ (programs)"
+          }
+        },
+        {
+          "license": {
+            "id": "LGPL-2.1+"
+          }
+        },
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        },
+        {
+          "license": {
+            "name": "MIT (library)"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:gnu:glibc:2.38:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://github.com/bminor/glibc/archive/2.38-44-gd37c2b20a4787463d192b32041c3406c2bd91de0/glibc-2.38-44-gd37c2b20a4787463d192b32041c3406c2bd91de0.tar.gz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "target"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-acl",
+      "type": "library",
+      "name": "acl",
+      "version": "2.3.2",
+      "licenses": [
+        {
+          "license": {
+            "name": "GPL-2.0+ (programs)"
+          }
+        },
+        {
+          "license": {
+            "name": "LGPL-2.1+ (libraries)"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:acl_project:acl:2.3.2:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://download.savannah.nongnu.org/releases/acl/acl-2.3.2.tar.xz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-attr",
+      "type": "library",
+      "name": "attr",
+      "version": "2.5.2",
+      "licenses": [
+        {
+          "license": {
+            "name": "GPL-2.0+ (programs)"
+          }
+        },
+        {
+          "license": {
+            "name": "LGPL-2.1+ (libraries)"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:attr_project:attr:2.5.2:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "http://download.savannah.gnu.org/releases/attr/attr-2.5.2.tar.xz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-autoconf",
+      "type": "library",
+      "name": "autoconf",
+      "version": "2.72",
+      "licenses": [
+        {
+          "license": {
+            "name": "GPL-3.0+ with exceptions"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "http://ftpmirror.gnu.org/autoconf/autoconf-2.72.tar.xz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-autoconf-archive",
+      "type": "library",
+      "name": "autoconf-archive",
+      "version": "2023.02.20",
+      "licenses": [
+        {
+          "license": {
+            "name": "GPL-3.0+ with exception"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "http://ftpmirror.gnu.org/autoconf-archive/autoconf-archive-2023.02.20.tar.xz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-automake",
+      "type": "library",
+      "name": "automake",
+      "version": "1.16.5",
+      "licenses": [
+        {
+          "license": {
+            "id": "GPL-2.0+"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:gnu:automake:1.16.5:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "http://ftpmirror.gnu.org/automake/automake-1.16.5.tar.xz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-binutils",
+      "type": "library",
+      "name": "binutils",
+      "version": "2.40",
+      "licenses": [
+        {
+          "license": {
+            "id": "GPL-3.0+"
+          }
+        },
+        {
+          "license": {
+            "name": "libiberty LGPL-2.1+"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:gnu:binutils:2.40:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "http://ftpmirror.gnu.org/binutils/binutils-2.40.tar.xz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-bison",
+      "type": "library",
+      "name": "bison",
+      "version": "3.8.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "GPL-3.0+"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:gnu:bison:3.8.2:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "http://ftpmirror.gnu.org/bison/bison-3.8.2.tar.xz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-cmake",
+      "type": "library",
+      "name": "cmake",
+      "version": "3.28.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:cmake_project:cmake:3.28.1:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://cmake.org/files/v3.28/cmake-3.28.1.tar.gz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-dosfstools",
+      "type": "library",
+      "name": "dosfstools",
+      "version": "4.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "GPL-3.0+"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:dosfstools_project:dosfstools:4.2:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://github.com/dosfstools/dosfstools/releases/download/v4.2/dosfstools-4.2.tar.gz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-dtc",
+      "type": "library",
+      "name": "dtc",
+      "version": "1.7.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "GPL-2.0+ or BSD-2-Clause (library)"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:dtc_project:dtc:1.7.0:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://www.kernel.org/pub/software/utils/dtc/dtc-1.7.0.tar.xz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-e2fsprogs",
+      "type": "library",
+      "name": "e2fsprogs",
+      "version": "1.47.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "GPL-2.0"
+          }
+        },
+        {
+          "license": {
+            "name": "MIT-like with advertising clause (libss and libet)"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:e2fsprogs_project:e2fsprogs:1.47.0:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://cdn.kernel.org/pub/linux/kernel/people/tytso/e2fsprogs/v1.47.0/e2fsprogs-1.47.0.tar.xz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-environment-setup",
+      "type": "library",
+      "name": "environment-setup",
+      "version": "",
+      "licenses": [
+        {
+          "license": {
+            "name": "unknown"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-expat",
+      "type": "library",
+      "name": "expat",
+      "version": "2.6.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:libexpat_project:libexpat:2.6.1:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "http://downloads.sourceforge.net/project/expat/expat/2.6.1/expat-2.6.1.tar.xz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-fakeroot",
+      "type": "library",
+      "name": "fakeroot",
+      "version": "1.32.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "GPL-3.0+"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://snapshot.debian.org/archive/debian/20230724T160429Z/pool/main/f/fakeroot/fakeroot_1.32.1.orig.tar.gz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-flex",
+      "type": "library",
+      "name": "flex",
+      "version": "2.6.4",
+      "licenses": [
+        {
+          "license": {
+            "name": "FLEX"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:westes:flex:2.6.4:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://github.com/westes/flex/files/981163/flex-2.6.4.tar.gz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-gawk",
+      "type": "library",
+      "name": "gawk",
+      "version": "5.3.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "GPL-3.0+"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "http://ftpmirror.gnu.org/gawk/gawk-5.3.0.tar.xz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-gcc-arm-none-eabi",
+      "type": "library",
+      "name": "gcc-arm-none-eabi",
+      "version": "1.0.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "GPLv3"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/7-2017q4/gcc-arm-none-eabi-7-2017-q4-major-linux.tar.bz2"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-gcc-final",
+      "type": "library",
+      "name": "gcc-final",
+      "version": "12.3.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "GPL-2.0"
+          }
+        },
+        {
+          "license": {
+            "id": "GPL-3.0"
+          }
+        },
+        {
+          "license": {
+            "id": "LGPL-2.1"
+          }
+        },
+        {
+          "license": {
+            "id": "LGPL-3.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "http://ftpmirror.gnu.org/gcc/gcc-12.3.0/gcc-12.3.0.tar.xz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-gcc-initial",
+      "type": "library",
+      "name": "gcc-initial",
+      "version": "12.3.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "GPL-2.0"
+          }
+        },
+        {
+          "license": {
+            "id": "GPL-3.0"
+          }
+        },
+        {
+          "license": {
+            "id": "LGPL-2.1"
+          }
+        },
+        {
+          "license": {
+            "id": "LGPL-3.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "http://ftpmirror.gnu.org/gcc/gcc-12.3.0/gcc-12.3.0.tar.xz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-gdb",
+      "type": "library",
+      "name": "gdb",
+      "version": "13.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "GPL-2.0+"
+          }
+        },
+        {
+          "license": {
+            "id": "LGPL-2.0+"
+          }
+        },
+        {
+          "license": {
+            "id": "GPL-3.0+"
+          }
+        },
+        {
+          "license": {
+            "id": "LGPL-3.0+"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:gnu:gdb:13.2:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "http://ftpmirror.gnu.org/gdb/gdb-13.2.tar.xz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-genimage",
+      "type": "library",
+      "name": "genimage",
+      "version": "17",
+      "licenses": [
+        {
+          "license": {
+            "id": "GPL-2.0"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://github.com/pengutronix/genimage/releases/download/v17/genimage-17.tar.xz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-gettext-tiny",
+      "type": "library",
+      "name": "gettext-tiny",
+      "version": "0.3.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        },
+        {
+          "license": {
+            "name": "GPL-3.0+ (extra gettext)"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://github.com/sabotage-linux/gettext-tiny/archive/v0.3.2/gettext-tiny-0.3.2.tar.gz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-gmp",
+      "type": "library",
+      "name": "gmp",
+      "version": "6.3.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "LGPL-3.0+ or GPL-2.0+"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:gmplib:gmp:6.3.0:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "http://ftpmirror.gnu.org/gmp/gmp-6.3.0.tar.xz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-jq",
+      "type": "library",
+      "name": "jq",
+      "version": "1.7.1",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT (code)"
+          }
+        },
+        {
+          "license": {
+            "name": "ICU (decNumber)"
+          }
+        },
+        {
+          "license": {
+            "name": "CC-BY-3.0 (documentation)"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:jq_project:jq:1.7.1:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-1.7.1.tar.gz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-kmod",
+      "type": "library",
+      "name": "kmod",
+      "version": "31",
+      "licenses": [
+        {
+          "license": {
+            "name": "LGPL-2.1+ (library)"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:kernel:kmod:31:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://cdn.kernel.org/pub/linux/utils/kernel/kmod/kmod-31.tar.xz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-libconfuse",
+      "type": "library",
+      "name": "libconfuse",
+      "version": "3.3",
+      "licenses": [
+        {
+          "license": {
+            "id": "ISC"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:libconfuse_project:libconfuse:3.3:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://github.com/martinh/libconfuse/releases/download/v3.3/confuse-3.3.tar.xz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-libffi",
+      "type": "library",
+      "name": "libffi",
+      "version": "3.4.4",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:libffi_project:libffi:3.4.4:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://github.com/libffi/libffi/releases/download/v3.4.4/libffi-3.4.4.tar.gz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-libiberty",
+      "type": "library",
+      "name": "libiberty",
+      "version": "2.41",
+      "licenses": [
+        {
+          "license": {
+            "id": "LGPL-2.1+"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "http://ftpmirror.gnu.org/binutils/binutils-2.41.tar.xz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-libopenssl",
+      "type": "library",
+      "name": "libopenssl",
+      "version": "3.2.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:openssl:openssl:3.2.1:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://www.openssl.org/source/openssl-3.2.1.tar.gz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-libtool",
+      "type": "library",
+      "name": "libtool",
+      "version": "2.4.6",
+      "licenses": [
+        {
+          "license": {
+            "name": "GPL-2.0+ (libtool)"
+          }
+        },
+        {
+          "license": {
+            "name": "LGPL-2.1+ (libltdl)"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:gnu:libtool:2.4.6:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "http://ftpmirror.gnu.org/libtool/libtool-2.4.6.tar.xz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-libzlib",
+      "type": "library",
+      "name": "libzlib",
+      "version": "1.3.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "Zlib"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:zlib:zlib:1.3.1:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://www.zlib.net/zlib-1.3.1.tar.xz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-lzip",
+      "type": "library",
+      "name": "lzip",
+      "version": "1.23",
+      "licenses": [
+        {
+          "license": {
+            "id": "GPL-2.0+"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "http://download.savannah.gnu.org/releases/lzip/lzip-1.23.tar.gz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-lzo",
+      "type": "library",
+      "name": "lzo",
+      "version": "2.10",
+      "licenses": [
+        {
+          "license": {
+            "id": "GPL-2.0+"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:lzo_project:lzo:2.10:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "http://www.oberhumer.com/opensource/lzo/download/lzo-2.10.tar.gz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-m4",
+      "type": "library",
+      "name": "m4",
+      "version": "1.4.19",
+      "licenses": [
+        {
+          "license": {
+            "id": "GPL-3.0+"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "http://ftpmirror.gnu.org/m4/m4-1.4.19.tar.xz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-m4-bsp",
+      "type": "library",
+      "name": "m4-bsp",
+      "version": "1.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://github.com/OpenNuvoton/MA35D1_RTP_BSP/archive/master/m4-bsp-1.0.tar.gz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-makedevs",
+      "type": "library",
+      "name": "makedevs",
+      "version": "",
+      "licenses": [
+        {
+          "license": {
+            "id": "GPL-2.0"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-mpc",
+      "type": "library",
+      "name": "mpc",
+      "version": "1.2.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "LGPL-3.0+"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "http://ftpmirror.gnu.org/mpc/mpc-1.2.1.tar.gz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-mpfr",
+      "type": "library",
+      "name": "mpfr",
+      "version": "4.1.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "LGPL-3.0+"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:mpfr:gnu_mpfr:4.1.1:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "http://www.mpfr.org/mpfr-4.1.1/mpfr-4.1.1.tar.xz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-mtd",
+      "type": "library",
+      "name": "mtd",
+      "version": "2.1.6",
+      "licenses": [
+        {
+          "license": {
+            "id": "GPL-2.0"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:mtd-utils_project:mtd-utils:2.1.6:*:*:*:*:*:*:*",
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-mtools",
+      "type": "library",
+      "name": "mtools",
+      "version": "4.0.43",
+      "licenses": [
+        {
+          "license": {
+            "id": "GPL-3.0+"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "http://ftpmirror.gnu.org/mtools/mtools-4.0.43.tar.lz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-ncurses",
+      "type": "library",
+      "name": "ncurses",
+      "version": "6.4-20230603",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT with advertising clause"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:gnu:ncurses:6.4.20230603:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://github.com/ThomasDickey/ncurses-snapshots/archive/v6_4_20230603/ncurses-6.4-20230603.tar.gz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-nu-eclipse",
+      "type": "library",
+      "name": "nu-eclipse",
+      "version": "",
+      "licenses": [
+        {
+          "license": {
+            "name": "unknown"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://www.nuvoton.com/export/resource-files/NuEclipse_V1.01.018_Linux_Setup.tar.gz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-parted",
+      "type": "library",
+      "name": "parted",
+      "version": "3.3",
+      "licenses": [
+        {
+          "license": {
+            "id": "GPL-3.0+"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:parted_project:parted:3.3:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "http://ftpmirror.gnu.org/parted/parted-3.3.tar.xz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-patchelf",
+      "type": "library",
+      "name": "patchelf",
+      "version": "0.13",
+      "licenses": [
+        {
+          "license": {
+            "id": "GPL-3.0+"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://github.com/NixOS/patchelf/releases/download/0.13/patchelf-0.13.tar.bz2"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-pkgconf",
+      "type": "library",
+      "name": "pkgconf",
+      "version": "1.6.3",
+      "licenses": [
+        {
+          "license": {
+            "name": "pkgconf license"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:pkgconf:pkgconf:1.6.3:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://distfiles.ariadne.space/pkgconf/pkgconf-1.6.3.tar.xz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-python-cffi",
+      "type": "library",
+      "name": "python-cffi",
+      "version": "1.16.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://files.pythonhosted.org/packages/68/ce/95b0bae7968c65473e1298efb042e10cafc7bafc14d9e4f154008241c91d/cffi-1.16.0.tar.gz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-python-cryptography",
+      "type": "library",
+      "name": "python-cryptography",
+      "version": "39.0.2",
+      "licenses": [
+        {
+          "license": {
+            "name": "Apache-2.0 or BSD-3-Clause"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:cryptography_project:cryptography:39.0.2:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://files.pythonhosted.org/packages/fa/f3/f4b8c175ea9a1de650b0085858059050b7953a93d66c97ed89b93b232996/cryptography-39.0.2.tar.gz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-python-flit-core",
+      "type": "library",
+      "name": "python-flit-core",
+      "version": "3.9.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://files.pythonhosted.org/packages/c4/e6/c1ac50fe3eebb38a155155711e6e864e254ce4b6e17fe2429b4c4d5b9e80/flit_core-3.9.0.tar.gz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-python-installer",
+      "type": "library",
+      "name": "python-installer",
+      "version": "0.7.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://files.pythonhosted.org/packages/05/18/ceeb4e3ab3aa54495775775b38ae42b10a92f42ce42dfa44da684289b8c8/installer-0.7.0.tar.gz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-python-packaging",
+      "type": "library",
+      "name": "python-packaging",
+      "version": "23.2",
+      "licenses": [
+        {
+          "license": {
+            "name": "Apache-2.0 or BSD-2-Clause"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://files.pythonhosted.org/packages/fb/2b/9b9c33ffed44ee921d0967086d653047286054117d584f1b1a7c22ceaf7b/packaging-23.2.tar.gz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-python-pycparser",
+      "type": "library",
+      "name": "python-pycparser",
+      "version": "2.21",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://files.pythonhosted.org/packages/5e/0b/95d387f5f4433cb0f53ff7ad859bd2c6051051cebbb564f139a999ab46de/pycparser-2.21.tar.gz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-python-pyelftools",
+      "type": "library",
+      "name": "python-pyelftools",
+      "version": "0.30",
+      "licenses": [
+        {
+          "license": {
+            "name": "Public domain"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://files.pythonhosted.org/packages/84/05/fd41cd647de044d1ffec90ce5aaae935126ac217f8ecb302186655284fc8/pyelftools-0.30.tar.gz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-python-pypa-build",
+      "type": "library",
+      "name": "python-pypa-build",
+      "version": "1.0.3",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://files.pythonhosted.org/packages/98/e3/83a89a9d338317f05a68c86a2bbc9af61235bc55a0c6a749d37598fb2af1/build-1.0.3.tar.gz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-python-pyproject-hooks",
+      "type": "library",
+      "name": "python-pyproject-hooks",
+      "version": "1.0.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://files.pythonhosted.org/packages/25/c1/374304b8407d3818f7025457b7366c8e07768377ce12edfe2aa58aa0f64c/pyproject_hooks-1.0.0.tar.gz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-python-semantic-version",
+      "type": "library",
+      "name": "python-semantic-version",
+      "version": "2.10.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-2-Clause"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://files.pythonhosted.org/packages/7d/31/f2289ce78b9b473d582568c234e104d2a342fd658cc288a7553d83bb8595/semantic_version-2.10.0.tar.gz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-python-setuptools",
+      "type": "library",
+      "name": "python-setuptools",
+      "version": "69.0.3",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:python:setuptools:69.0.3:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://files.pythonhosted.org/packages/fc/c9/b146ca195403e0182a374e0ea4dbc69136bad3cd55bc293df496d625d0f7/setuptools-69.0.3.tar.gz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-python-setuptools-rust",
+      "type": "library",
+      "name": "python-setuptools-rust",
+      "version": "1.8.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://files.pythonhosted.org/packages/f2/40/f1e9fedb88462248e94ea4383cda0065111582a4d5a32ca84acf60ab1107/setuptools-rust-1.8.1.tar.gz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-python-wheel",
+      "type": "library",
+      "name": "python-wheel",
+      "version": "0.40.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:wheel_project:wheel:0.40.0:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://files.pythonhosted.org/packages/fc/ef/0335f7217dd1e8096a9e8383e1d472aa14717878ffe07c4772e68b6e8735/wheel-0.40.0.tar.gz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-python3",
+      "type": "library",
+      "name": "python3",
+      "version": "3.11.8",
+      "licenses": [
+        {
+          "license": {
+            "id": "Python-2.0"
+          }
+        },
+        {
+          "license": {
+            "name": "others"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:python:python:3.11.8:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://python.org/ftp/python/3.11.8/Python-3.11.8.tar.xz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-python3-nuwriter",
+      "type": "library",
+      "name": "python3-nuwriter",
+      "version": "1.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://github.com/OpenNuvoton/MA35D1_NuWriter/archive/master/nuwriter-1.0.tar.gz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-python3-pip",
+      "type": "library",
+      "name": "python3-pip",
+      "version": "21.3",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:pypa:pip:21.3:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://files.pythonhosted.org/packages/00/5f/d6959d6f25f202e3e68e3a53b815af42d770c829c19382d0acbf2c3e2112/pip-21.3.tar.gz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-rust-bin",
+      "type": "library",
+      "name": "rust-bin",
+      "version": "1.74.1",
+      "licenses": [
+        {
+          "license": {
+            "name": "Apache-2.0 or MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://static.rust-lang.org/dist/rust-1.74.1-x86_64-unknown-linux-gnu.tar.xz"
+        },
+        {
+          "type": "source-distribution",
+          "url": "https://static.rust-lang.org/dist/rust-std-1.74.1-aarch64-unknown-linux-gnu.tar.xz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-skeleton",
+      "type": "library",
+      "name": "skeleton",
+      "version": "",
+      "licenses": [
+        {
+          "license": {
+            "name": "unknown"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-uboot-tools",
+      "type": "library",
+      "name": "uboot-tools",
+      "version": "2021.07",
+      "licenses": [
+        {
+          "license": {
+            "id": "GPL-2.0+"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:denx:u-boot:2021.07:*:*:*:*:*:*:*",
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-util-linux",
+      "type": "library",
+      "name": "util-linux",
+      "version": "2.39.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "GPL-2.0+"
+          }
+        },
+        {
+          "license": {
+            "id": "BSD-4-Clause"
+          }
+        },
+        {
+          "license": {
+            "name": "LGPL-2.1+ (libblkid, libfdisk, libmount)"
+          }
+        },
+        {
+          "license": {
+            "name": "BSD-3-Clause (libuuid)"
+          }
+        },
+        {
+          "license": {
+            "name": "BSD-2-Clause (xxhash)"
+          }
+        },
+        {
+          "license": {
+            "name": "ISC (rfkill)"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:kernel:util-linux:2.39.2:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://cdn.kernel.org/pub/linux/utils/util-linux/v2.39/util-linux-2.39.2.tar.xz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "host-zstd",
+      "type": "library",
+      "name": "zstd",
+      "version": "1.5.5",
+      "licenses": [
+        {
+          "license": {
+            "name": "BSD-3-Clause or GPL-2.0"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:facebook:zstandard:1.5.5:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://github.com/facebook/zstd/releases/download/v1.5.5/zstd-1.5.5.tar.gz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "host"
+        }
+      ]
+    },
+    {
+      "bom-ref": "ifupdown-scripts",
+      "type": "library",
+      "name": "ifupdown-scripts",
+      "version": "",
+      "licenses": [
+        {
+          "license": {
+            "name": "unknown"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "target"
+        }
+      ]
+    },
+    {
+      "bom-ref": "initscripts",
+      "type": "library",
+      "name": "initscripts",
+      "version": "",
+      "licenses": [
+        {
+          "license": {
+            "name": "unknown"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "target"
+        }
+      ]
+    },
+    {
+      "bom-ref": "iproute2",
+      "type": "library",
+      "name": "iproute2",
+      "version": "6.7.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "GPL-2.0+"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:iproute2_project:iproute2:6.7.0:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://cdn.kernel.org/pub/linux/utils/net/iproute2/iproute2-6.7.0.tar.xz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "target"
+        }
+      ]
+    },
+    {
+      "bom-ref": "libffi",
+      "type": "library",
+      "name": "libffi",
+      "version": "3.4.4",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:libffi_project:libffi:3.4.4:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://github.com/libffi/libffi/releases/download/v3.4.4/libffi-3.4.4.tar.gz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "target"
+        }
+      ]
+    },
+    {
+      "bom-ref": "libopenssl",
+      "type": "library",
+      "name": "libopenssl",
+      "version": "3.2.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:openssl:openssl:3.2.1:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://www.openssl.org/source/openssl-3.2.1.tar.gz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "target"
+        }
+      ]
+    },
+    {
+      "bom-ref": "libsocketcan",
+      "type": "library",
+      "name": "libsocketcan",
+      "version": "0.0.12",
+      "licenses": [
+        {
+          "license": {
+            "id": "LGPL-2.1+"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "http://www.pengutronix.de/software/libsocketcan/download/libsocketcan-0.0.12.tar.bz2"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "target"
+        }
+      ]
+    },
+    {
+      "bom-ref": "libzlib",
+      "type": "library",
+      "name": "libzlib",
+      "version": "1.3.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "Zlib"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:zlib:zlib:1.3.1:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://www.zlib.net/zlib-1.3.1.tar.xz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "target"
+        }
+      ]
+    },
+    {
+      "bom-ref": "linux",
+      "type": "library",
+      "name": "linux",
+      "version": "6.12.104",
+      "licenses": [
+        {
+          "license": {
+            "id": "GPL-2.0"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:o:linux:linux_kernel:6.12.104:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://github.com/OpenNuvoton/MA35D1_linux-6.6.y/archive/master/MA35D1_linux-6.6.y-master.tar.gz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "target"
+        }
+      ]
+    },
+    {
+      "bom-ref": "linux-headers",
+      "type": "library",
+      "name": "linux-headers",
+      "version": "6.12.104",
+      "licenses": [
+        {
+          "license": {
+            "id": "GPL-2.0"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:linux:linux_kernel:6.12.104:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://github.com/OpenNuvoton/MA35D1_linux-6.6.y/archive/master/MA35D1_linux-6.6.y-master.tar.gz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "target"
+        }
+      ]
+    },
+    {
+      "bom-ref": "optee-os",
+      "type": "library",
+      "name": "optee-os",
+      "version": "master",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-2-Clause"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://github.com/OpenNuvoton/optee_os_ma35/archive/master/optee_os_ma35-master.tar.gz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "target"
+        }
+      ]
+    },
+    {
+      "bom-ref": "parted",
+      "type": "library",
+      "name": "parted",
+      "version": "3.3",
+      "licenses": [
+        {
+          "license": {
+            "id": "GPL-3.0+"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:parted_project:parted:3.3:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "http://ftpmirror.gnu.org/parted/parted-3.3.tar.xz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "target"
+        }
+      ]
+    },
+    {
+      "bom-ref": "skeleton-init-common",
+      "type": "library",
+      "name": "skeleton-init-common",
+      "version": "",
+      "licenses": [
+        {
+          "license": {
+            "name": "unknown"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "target"
+        }
+      ]
+    },
+    {
+      "bom-ref": "skeleton-init-sysv",
+      "type": "library",
+      "name": "skeleton-init-sysv",
+      "version": "",
+      "licenses": [
+        {
+          "license": {
+            "name": "unknown"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "target"
+        }
+      ]
+    },
+    {
+      "bom-ref": "tslib",
+      "type": "library",
+      "name": "tslib",
+      "version": "1.23",
+      "licenses": [
+        {
+          "license": {
+            "name": "GPL-2.0+ (programs)"
+          }
+        },
+        {
+          "license": {
+            "name": "LGPL-2.1+ (libraries)"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://github.com/libts/tslib/releases/download/1.23/tslib-1.23.tar.xz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "target"
+        }
+      ]
+    },
+    {
+      "bom-ref": "uboot",
+      "type": "library",
+      "name": "uboot",
+      "version": "2020.07",
+      "licenses": [
+        {
+          "license": {
+            "id": "GPL-2.0+"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:denx:u-boot:2020.07:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://github.com/OpenNuvoton/MA35D1_u-boot-v2020.07/archive/master/MA35D1_u-boot-v2020.07-master.tar.gz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "target"
+        }
+      ]
+    },
+    {
+      "bom-ref": "urandom-scripts",
+      "type": "library",
+      "name": "urandom-scripts",
+      "version": "",
+      "licenses": [
+        {
+          "license": {
+            "name": "unknown"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "target"
+        }
+      ]
+    },
+    {
+      "bom-ref": "util-linux",
+      "type": "library",
+      "name": "util-linux",
+      "version": "2.39.2",
+      "licenses": [
+        {
+          "license": {
+            "id": "GPL-2.0+"
+          }
+        },
+        {
+          "license": {
+            "id": "BSD-4-Clause"
+          }
+        },
+        {
+          "license": {
+            "name": "LGPL-2.1+ (libblkid, libfdisk, libmount)"
+          }
+        },
+        {
+          "license": {
+            "name": "BSD-3-Clause (libuuid)"
+          }
+        },
+        {
+          "license": {
+            "name": "BSD-2-Clause (xxhash)"
+          }
+        },
+        {
+          "license": {
+            "name": "ISC (rfkill)"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:kernel:util-linux:2.39.2:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "type": "source-distribution",
+          "url": "https://cdn.kernel.org/pub/linux/utils/util-linux/v2.39/util-linux-2.39.2.tar.xz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "BR_TYPE",
+          "value": "target"
+        }
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "buildroot",
+      "dependsOn": [
+        "arm-trusted-firmware",
+        "busybox",
+        "can-utils",
+        "expat",
+        "gcc-final",
+        "host-dosfstools",
+        "host-e2fsprogs",
+        "host-environment-setup",
+        "host-fakeroot",
+        "host-gdb",
+        "host-genimage",
+        "host-gettext-tiny",
+        "host-jq",
+        "host-libopenssl",
+        "host-libzlib",
+        "host-m4-bsp",
+        "host-makedevs",
+        "host-mtd",
+        "host-mtools",
+        "host-parted",
+        "host-patchelf",
+        "host-python3-nuwriter",
+        "host-rust-bin",
+        "ifupdown-scripts",
+        "initscripts",
+        "libffi",
+        "libopenssl",
+        "libsocketcan",
+        "libzlib",
+        "linux",
+        "parted",
+        "skeleton-init-sysv",
+        "tslib",
+        "urandom-scripts"
+      ]
+    },
+    {
+      "ref": "arm-trusted-firmware",
+      "dependsOn": [
+        "host-dtc",
+        "host-skeleton",
+        "optee-os",
+        "uboot"
+      ]
+    },
+    {
+      "ref": "busybox",
+      "dependsOn": [
+        "e2fsprogs",
+        "host-skeleton",
+        "iproute2",
+        "util-linux"
+      ]
+    },
+    {
+      "ref": "can-utils",
+      "dependsOn": [
+        "host-autoconf",
+        "host-automake",
+        "host-libtool",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "e2fsprogs",
+      "dependsOn": [
+        "host-pkgconf",
+        "host-skeleton",
+        "util-linux"
+      ]
+    },
+    {
+      "ref": "expat",
+      "dependsOn": [
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "gcc-final",
+      "dependsOn": [
+        "host-gcc-final",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "glibc",
+      "dependsOn": [
+        "host-bison",
+        "host-gawk",
+        "host-gcc-initial",
+        "host-skeleton",
+        "linux-headers"
+      ]
+    },
+    {
+      "ref": "host-acl",
+      "dependsOn": [
+        "host-attr",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-attr",
+      "dependsOn": [
+        "host-autoconf",
+        "host-automake",
+        "host-libtool",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-autoconf",
+      "dependsOn": [
+        "host-libtool",
+        "host-m4",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-autoconf-archive",
+      "dependsOn": [
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-automake",
+      "dependsOn": [
+        "host-autoconf",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-binutils",
+      "dependsOn": [
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-bison",
+      "dependsOn": [
+        "host-m4",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-cmake",
+      "dependsOn": [
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-dosfstools",
+      "dependsOn": [
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-dtc",
+      "dependsOn": [
+        "host-bison",
+        "host-flex",
+        "host-pkgconf",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-e2fsprogs",
+      "dependsOn": [
+        "host-pkgconf",
+        "host-skeleton",
+        "host-util-linux"
+      ]
+    },
+    {
+      "ref": "host-environment-setup",
+      "dependsOn": [
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-expat",
+      "dependsOn": [
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-fakeroot",
+      "dependsOn": [
+        "host-acl",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-flex",
+      "dependsOn": [
+        "host-autoconf",
+        "host-automake",
+        "host-libtool",
+        "host-m4",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-gawk",
+      "dependsOn": [
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-gcc-arm-none-eabi",
+      "dependsOn": [
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-gcc-final",
+      "dependsOn": [
+        "glibc",
+        "host-binutils",
+        "host-gmp",
+        "host-mpc",
+        "host-mpfr",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-gcc-initial",
+      "dependsOn": [
+        "host-binutils",
+        "host-gmp",
+        "host-mpc",
+        "host-mpfr",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-gdb",
+      "dependsOn": [
+        "host-expat",
+        "host-gmp",
+        "host-libiberty",
+        "host-ncurses",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-genimage",
+      "dependsOn": [
+        "host-libconfuse",
+        "host-pkgconf",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-gettext-tiny",
+      "dependsOn": [
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-gmp",
+      "dependsOn": [
+        "host-m4",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-jq",
+      "dependsOn": [
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-kmod",
+      "dependsOn": [
+        "host-pkgconf",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-libconfuse",
+      "dependsOn": [
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-libffi",
+      "dependsOn": [
+        "host-autoconf",
+        "host-automake",
+        "host-libtool",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-libiberty",
+      "dependsOn": [
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-libopenssl",
+      "dependsOn": [
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-libtool",
+      "dependsOn": [
+        "host-m4",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-libzlib",
+      "dependsOn": [
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-lzip",
+      "dependsOn": [
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-lzo",
+      "dependsOn": [
+        "host-cmake",
+        "host-pkgconf",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-m4",
+      "dependsOn": [
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-m4-bsp",
+      "dependsOn": [
+        "host-gcc-arm-none-eabi",
+        "host-nu-eclipse",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-makedevs",
+      "dependsOn": [
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-mpc",
+      "dependsOn": [
+        "host-gmp",
+        "host-mpfr",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-mpfr",
+      "dependsOn": [
+        "host-gmp",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-mtd",
+      "dependsOn": [
+        "host-acl",
+        "host-lzo",
+        "host-skeleton",
+        "host-util-linux",
+        "host-zstd"
+      ]
+    },
+    {
+      "ref": "host-mtools",
+      "dependsOn": [
+        "host-lzip",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-ncurses",
+      "dependsOn": [
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-nu-eclipse",
+      "dependsOn": [
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-parted",
+      "dependsOn": [
+        "host-pkgconf",
+        "host-skeleton",
+        "host-util-linux"
+      ]
+    },
+    {
+      "ref": "host-patchelf",
+      "dependsOn": [
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-pkgconf",
+      "dependsOn": [
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-python-cffi",
+      "dependsOn": [
+        "host-libffi",
+        "host-pkgconf",
+        "host-python-pycparser",
+        "host-python-setuptools",
+        "host-python3",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-python-cryptography",
+      "dependsOn": [
+        "host-python-cffi",
+        "host-python-setuptools",
+        "host-python-setuptools-rust",
+        "host-python3",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-python-flit-core",
+      "dependsOn": [
+        "host-python3",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-python-installer",
+      "dependsOn": [
+        "host-python-flit-core",
+        "host-python3",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-python-packaging",
+      "dependsOn": [
+        "host-python-installer",
+        "host-python3",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-python-pycparser",
+      "dependsOn": [
+        "host-python-setuptools",
+        "host-python3",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-python-pyelftools",
+      "dependsOn": [
+        "host-python-setuptools",
+        "host-python3",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-python-pypa-build",
+      "dependsOn": [
+        "host-python-installer",
+        "host-python-packaging",
+        "host-python-pyproject-hooks",
+        "host-python3",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-python-pyproject-hooks",
+      "dependsOn": [
+        "host-python-installer",
+        "host-python3",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-python-semantic-version",
+      "dependsOn": [
+        "host-python-setuptools",
+        "host-python3",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-python-setuptools",
+      "dependsOn": [
+        "host-python-installer",
+        "host-python-pypa-build",
+        "host-python-wheel",
+        "host-python3",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-python-setuptools-rust",
+      "dependsOn": [
+        "host-python-semantic-version",
+        "host-python-setuptools",
+        "host-python3",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-python-wheel",
+      "dependsOn": [
+        "host-python-flit-core",
+        "host-python-installer",
+        "host-python-pypa-build",
+        "host-python3",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-python3",
+      "dependsOn": [
+        "host-autoconf",
+        "host-autoconf-archive",
+        "host-automake",
+        "host-expat",
+        "host-libffi",
+        "host-libtool",
+        "host-pkgconf",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-python3-nuwriter",
+      "dependsOn": [
+        "host-python3-pip",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-python3-pip",
+      "dependsOn": [
+        "host-python-setuptools",
+        "host-python3",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-rust-bin",
+      "dependsOn": [
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-skeleton",
+      "dependsOn": []
+    },
+    {
+      "ref": "host-uboot-tools",
+      "dependsOn": [
+        "host-dtc",
+        "host-skeleton",
+        "uboot"
+      ]
+    },
+    {
+      "ref": "host-util-linux",
+      "dependsOn": [
+        "host-autoconf",
+        "host-automake",
+        "host-libtool",
+        "host-pkgconf",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "host-zstd",
+      "dependsOn": [
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "ifupdown-scripts",
+      "dependsOn": [
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "initscripts",
+      "dependsOn": [
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "iproute2",
+      "dependsOn": [
+        "host-bison",
+        "host-flex",
+        "host-pkgconf",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "libffi",
+      "dependsOn": [
+        "host-autoconf",
+        "host-automake",
+        "host-libtool",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "libopenssl",
+      "dependsOn": [
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "libsocketcan",
+      "dependsOn": [
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "libzlib",
+      "dependsOn": [
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "linux",
+      "dependsOn": [
+        "host-bison",
+        "host-flex",
+        "host-kmod",
+        "host-skeleton",
+        "host-uboot-tools"
+      ]
+    },
+    {
+      "ref": "linux-headers",
+      "dependsOn": [
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "optee-os",
+      "dependsOn": [
+        "host-python-cryptography",
+        "host-python-pyelftools",
+        "host-python3",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "parted",
+      "dependsOn": [
+        "host-pkgconf",
+        "host-skeleton",
+        "util-linux"
+      ]
+    },
+    {
+      "ref": "skeleton-init-common",
+      "dependsOn": [
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "skeleton-init-sysv",
+      "dependsOn": [
+        "host-skeleton",
+        "skeleton-init-common"
+      ]
+    },
+    {
+      "ref": "tslib",
+      "dependsOn": [
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "uboot",
+      "dependsOn": [
+        "host-dtc",
+        "host-pkgconf",
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "urandom-scripts",
+      "dependsOn": [
+        "host-skeleton"
+      ]
+    },
+    {
+      "ref": "util-linux",
+      "dependsOn": [
+        "host-autoconf",
+        "host-automake",
+        "host-libtool",
+        "host-pkgconf",
+        "host-skeleton"
+      ]
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "id": "CVE-2022-28391",
+      "source": {
+        "name": "NVD",
+        "url": "https://nvd.nist.gov/vuln/detail/CVE-2022-28391"
+      },
+      "analysis": {
+        "state": "in_triage",
+        "detail": "The CVE 'CVE-2022-28391' has been marked as ignored by Buildroot"
+      },
+      "affects": [
+        {
+          "ref": "busybox"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2010-4756",
+      "source": {
+        "name": "NVD",
+        "url": "https://nvd.nist.gov/vuln/detail/CVE-2010-4756"
+      },
+      "analysis": {
+        "state": "in_triage",
+        "detail": "The CVE 'CVE-2010-4756' has been marked as ignored by Buildroot"
+      },
+      "affects": [
+        {
+          "ref": "glibc"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2019-1010022",
+      "source": {
+        "name": "NVD",
+        "url": "https://nvd.nist.gov/vuln/detail/CVE-2019-1010022"
+      },
+      "analysis": {
+        "state": "in_triage",
+        "detail": "The CVE 'CVE-2019-1010022' has been marked as ignored by Buildroot"
+      },
+      "affects": [
+        {
+          "ref": "glibc"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2019-1010023",
+      "source": {
+        "name": "NVD",
+        "url": "https://nvd.nist.gov/vuln/detail/CVE-2019-1010023"
+      },
+      "analysis": {
+        "state": "in_triage",
+        "detail": "The CVE 'CVE-2019-1010023' has been marked as ignored by Buildroot"
+      },
+      "affects": [
+        {
+          "ref": "glibc"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2019-1010024",
+      "source": {
+        "name": "NVD",
+        "url": "https://nvd.nist.gov/vuln/detail/CVE-2019-1010024"
+      },
+      "analysis": {
+        "state": "in_triage",
+        "detail": "The CVE 'CVE-2019-1010024' has been marked as ignored by Buildroot"
+      },
+      "affects": [
+        {
+          "ref": "glibc"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2019-1010025",
+      "source": {
+        "name": "NVD",
+        "url": "https://nvd.nist.gov/vuln/detail/CVE-2019-1010025"
+      },
+      "analysis": {
+        "state": "in_triage",
+        "detail": "The CVE 'CVE-2019-1010025' has been marked as ignored by Buildroot"
+      },
+      "affects": [
+        {
+          "ref": "glibc"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2023-4527",
+      "source": {
+        "name": "NVD",
+        "url": "https://nvd.nist.gov/vuln/detail/CVE-2023-4527"
+      },
+      "analysis": {
+        "state": "in_triage",
+        "detail": "The CVE 'CVE-2023-4527' has been marked as ignored by Buildroot"
+      },
+      "affects": [
+        {
+          "ref": "glibc"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2023-4806",
+      "source": {
+        "name": "NVD",
+        "url": "https://nvd.nist.gov/vuln/detail/CVE-2023-4806"
+      },
+      "analysis": {
+        "state": "in_triage",
+        "detail": "The CVE 'CVE-2023-4806' has been marked as ignored by Buildroot"
+      },
+      "affects": [
+        {
+          "ref": "glibc"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2023-4911",
+      "source": {
+        "name": "NVD",
+        "url": "https://nvd.nist.gov/vuln/detail/CVE-2023-4911"
+      },
+      "analysis": {
+        "state": "in_triage",
+        "detail": "The CVE 'CVE-2023-4911' has been marked as ignored by Buildroot"
+      },
+      "affects": [
+        {
+          "ref": "glibc"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2023-5156",
+      "source": {
+        "name": "NVD",
+        "url": "https://nvd.nist.gov/vuln/detail/CVE-2023-5156"
+      },
+      "analysis": {
+        "state": "in_triage",
+        "detail": "The CVE 'CVE-2023-5156' has been marked as ignored by Buildroot"
+      },
+      "affects": [
+        {
+          "ref": "glibc"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2023-6246",
+      "source": {
+        "name": "NVD",
+        "url": "https://nvd.nist.gov/vuln/detail/CVE-2023-6246"
+      },
+      "analysis": {
+        "state": "in_triage",
+        "detail": "The CVE 'CVE-2023-6246' has been marked as ignored by Buildroot"
+      },
+      "affects": [
+        {
+          "ref": "glibc"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2023-6779",
+      "source": {
+        "name": "NVD",
+        "url": "https://nvd.nist.gov/vuln/detail/CVE-2023-6779"
+      },
+      "analysis": {
+        "state": "in_triage",
+        "detail": "The CVE 'CVE-2023-6779' has been marked as ignored by Buildroot"
+      },
+      "affects": [
+        {
+          "ref": "glibc"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2023-6780",
+      "source": {
+        "name": "NVD",
+        "url": "https://nvd.nist.gov/vuln/detail/CVE-2023-6780"
+      },
+      "analysis": {
+        "state": "in_triage",
+        "detail": "The CVE 'CVE-2023-6780' has been marked as ignored by Buildroot"
+      },
+      "affects": [
+        {
+          "ref": "glibc"
+        }
+      ]
+    }
+  ]
+}
