@@ -141,12 +141,10 @@ config BR2_LINUX_KERNEL_MA35_6_12_VERSION
 	select BR2_TOOLCHAIN_HEADERS_AT_LEAST_6_12
 	select BR2_PACKAGE_HOST_LINUX_HEADERS_CUSTOM_6_6
 
-# Kernel 6.18 is not released yet; reserved for future use.
-# Uncomment (and add a "bool" prompt) once 6.18 is released.
-#config BR2_LINUX_KERNEL_MA35_6_18_VERSION
-#	bool "Kernel 6.18"
-#	select BR2_TOOLCHAIN_HEADERS_AT_LEAST_6_18
-#	select BR2_PACKAGE_HOST_LINUX_HEADERS_CUSTOM_6_6
+config BR2_LINUX_KERNEL_MA35_6_18_VERSION
+	bool "Kernel 6.18"
+	select BR2_TOOLCHAIN_HEADERS_AT_LEAST_6_18
+	select BR2_PACKAGE_HOST_LINUX_HEADERS_CUSTOM_6_6
 endchoice
 
 
