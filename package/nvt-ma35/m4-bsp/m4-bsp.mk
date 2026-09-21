@@ -9,8 +9,7 @@
 HOST_M4_BSP_VERSION = 1.0
 HOST_M4_BSP_SOURCE = m4-bsp-$(PYTHON3_NUWRITER_VERSION).tar.gz
 HOST_M4_BSP_SITE = $(call github,OpenNuvoton,MA35D1_RTP_BSP,master)
-HOST_M4_BSP_LICENSE=MIT
-HOST_M4_BSP_LICENSE_FILES=LICENSE
+HOST_M4_BSP_LICENSE = Apache-2.0, MIT, GPL-2.0 and others
 HOST_M4_BSP_DEPENDENCIES= host-gcc-arm-none-eabi host-nu-eclipse
 
 define HOST_M4_BSP_BUILD_CMDS
@@ -26,4 +25,3 @@ define HOST_M4_BSP_INSTALL_CMDS
 endef
 
 $(eval $(host-generic-package))
-
