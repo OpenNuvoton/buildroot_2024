@@ -603,9 +603,6 @@ define LINUX_BUILD_CMDS
 	if grep -q "CONFIG_ARCH_NUC970=y" $(@D)/.config; then  \
 		mkdir -p $(@D)/../image; \
 	fi
-	if grep -q "BR2_TARGET_OPTEE_OS=y" .config; then \
-		cat board/nuvoton/$(MA35)/optee.config >> $(@D)/.config; \
-	fi
 	$(LINUX_MAKE_ENV) $(BR2_MAKE) $(LINUX_MAKE_FLAGS) -C $(@D) all
 	$(LINUX_MAKE_ENV) $(BR2_MAKE) $(LINUX_MAKE_FLAGS) -C $(@D) $(LINUX_TARGET_NAME)
 	$(LINUX_BUILD_DTB)

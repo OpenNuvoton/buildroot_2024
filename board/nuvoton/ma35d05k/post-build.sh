@@ -1,0 +1,47 @@
+#!/bin/sh
+
+MODULES_DIR=board/nuvoton/ma35d05k/modules/5.10.140
+MODULES_TDIR=$TARGET_DIR/lib/modules/5.10.140
+GFXDRIVERS_TDIR=$TARGET_DIR/usr/lib/directfb-1.7-7/gfxdrivers
+
+if grep -Eq "^BR2_LINUX_KERNEL_MA35_6_6_VERSION=y$" ${BR2_CONFIG}; then
+       MODULES_DIR=board/nuvoton/ma35d05k/modules/6.6.93
+       MODULES_TDIR=$TARGET_DIR/lib/modules/6.6.93
+fi
+
+RESIZE_FILE=${TARGET_DIR}/etc/init.d/S50resize
+cp board/nuvoton/ma35d05k/resize.sh ${TARGET_DIR}/etc/
+if [ -f ${RESIZE_FILE} ]; then
+        rm ${RESIZE_FILE}
+fi
+if grep -Eq "^BR2_MA35D1_RESIZE_SD_MAX=y$" ${BR2_CONFIG}; then
+	export $(grep "BR2_MA35D1_RESIZE_DISK_DRIVE=" $BR2_CONFIG | sed 's/\"//g')
+	export $(grep "BR2_MA35D1_RESIZE_DISK_NUM=" $BR2_CONFIG | sed 's/\"//g')
+	echo "#!/bin/sh" >> ${RESIZE_FILE}
+	echo "/etc/resize.sh ${BR2_MA35D1_RESIZE_DISK_DRIVE} ${BR2_MA35D1_RESIZE_DISK_NUM}" >> ${RESIZE_FILE}
+	chmod 755 ${RESIZE_FILE}
+fi
+
+if grep -Eq "^BR2_PACKAGE_BUSYBOX=y$" ${BR2_CONFIG}; then
+	if grep -Eq "^BR2_LINUX_KERNEL_MA35_6_12_VERSION=y$|^BR2_LINUX_KERNEL_MA35_6_18_VERSION=y$" ${BR2_CONFIG}; then
+		: # VC8000/DC/GPU drivers are fully built into the 6.12/6.18 kernel;
+		  # no legacy .ko modules or insmod scripts are needed.
+	else
+		install -d -m 755 ${MODULES_TDIR}
+		for module in ${MODULES_DIR}/*.ko; do
+			[ -e "${module}" ] || continue
+			cp "${module}" "${MODULES_TDIR}/"
+		done
+		if grep -Eq "^BR2_LINUX_KERNEL_MA35_6_6_VERSION=y$" ${BR2_CONFIG}; then
+			cp board/nuvoton/ma35d05k/modules/6.6.93_modules.sh ${TARGET_DIR}/etc/profile.d/modules.sh
+		else
+			install -d -m 755 ${GFXDRIVERS_TDIR}
+			cp ${MODULES_DIR}/../libdirectfb_gal.so ${GFXDRIVERS_TDIR}/
+			cp ${MODULES_DIR}/../libGAL.so ${TARGET_DIR}/usr/lib/
+			cp ${MODULES_DIR}/../modules.sh ${TARGET_DIR}/etc/profile.d/
+			if grep -Eq "^BR2_TARGET_KERNEL_DRM_MA35_VERSION=y$" ${BR2_CONFIG}; then
+				sed -i '1d' ${TARGET_DIR}/etc/profile.d/modules.sh
+			fi
+		fi
+	fi
+fi

@@ -1,0 +1,76 @@
+{
+  "image": [
+    {
+      "offset": "0x0",
+      "file": "MBR.sdcard.bin",
+      "type": 0
+    },
+    {
+      "offset": "0x400",
+      "file": "header.bin",
+      "type": 0
+    },
+    {
+      "offset": "0x20000",
+      "file": "nuwriter/bl2.dtb",
+      "type": 0
+    },
+    {
+      "offset": "0x30000",
+      "file": "nuwriter/bl2.bin",
+      "type": 0
+    },
+    {
+      "offset": "0x50000",
+      "file": "uboot-env.bin-sdcard",
+      "type": 0
+    },
+    {
+      "offset": "0xC0000",
+      "file": "fip.bin-sdcard",
+      "type": 0
+    },
+    {
+      "offset": "0x300000",
+      "file": "Image.fit",
+      "type": 0
+    },
+
+    {
+      "offset": "600",
+      "file": "header-1.bin",
+      "type": 0
+    },
+    {
+      "offset": "0x2420000",
+      "file": "nuwriter/bl2.dtb",
+      "type": 0
+    },
+    {
+      "offset": "0x2430000",
+      "file": "nuwriter/bl2.bin",
+      "type": 0
+    },
+    {
+      "offset": "0x2450000",
+      "file": "uboot-env.bin-sdcard",
+      "type": 0
+    },
+    {
+      "offset": "0x24C0000",
+      "file": "fip.bin-sdcard",
+      "type": 0
+    },
+    {
+      "offset": "0x2700000",
+      "file": "Image.fit",
+      "type": 0
+    },
+
+    {
+      "offset": "75497472",
+      "file": "rootfs.ext4",
+      "type": 0
+    }
+  ]
+}

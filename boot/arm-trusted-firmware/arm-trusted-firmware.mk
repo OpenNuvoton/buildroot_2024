@@ -202,7 +202,7 @@ define ARM_TRUSTED_FIRMWARE_BUILD_FIPTOOL
 
 	if [ "${BR2_NUVOTON_MA35D1}" == "y" ] && [ "${BR2_NUVOTON_MA35D1_D0}" == "y" ]; then \
 	if [ "${TFA_CPU650_CUSTOM_DDR}" == "y" ]; then \
-		cp $(BASE_DIR)/../board/nuvoton/ma35d0/ddr/$(call qstrip,$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_CUSTOM_DDR)) $(@D)/plat/nuvoton/$(call qstrip,ma35d1)/include/custom_ddr.h; \
+		cp $(BASE_DIR)/../board/nuvoton/ma35d05k/ddr/$(call qstrip,$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_CUSTOM_DDR)) $(@D)/plat/nuvoton/$(call qstrip,ma35d1)/include/custom_ddr.h; \
 	fi \
 	fi
 
