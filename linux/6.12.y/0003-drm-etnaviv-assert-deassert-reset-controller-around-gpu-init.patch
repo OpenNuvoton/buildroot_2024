@@ -1,0 +1,112 @@
+From a394a541a07da9f4ac5bb560bf02f1c9332027d1 Mon Sep 17 00:00:00 2001
+From: yclu4 <yclu4@nuvoton.com>
+Date: Tue, 22 Sep 2026 13:53:09 +0800
+Subject: [PATCH] drm/etnaviv: assert/deassert reset controller around GPU init
+
+The GC520 core on MA35D1 can come out of power-on (or a prior soft
+reset) in a state where etnaviv_hw_identify()'s register reads are
+unreliable and the internal VIVS_HI_CLOCK_CONTROL soft-reset sequence
+alone cannot recover it. This is a backport of the equivalent support
+already present in linux-6.18.
+
+Signed-off-by: yclu4 <yclu4@nuvoton.com>
+---
+ drivers/gpu/drm/etnaviv/etnaviv_gpu.c | 40 +++++++++++++++++++++++++++
+ drivers/gpu/drm/etnaviv/etnaviv_gpu.h |  2 ++
+ 2 files changed, 42 insertions(+)
+
+diff --git a/drivers/gpu/drm/etnaviv/etnaviv_gpu.c b/drivers/gpu/drm/etnaviv/etnaviv_gpu.c
+index df0bc828a..a6e73cd77 100644
+--- a/drivers/gpu/drm/etnaviv/etnaviv_gpu.c
++++ b/drivers/gpu/drm/etnaviv/etnaviv_gpu.c
+@@ -13,6 +13,7 @@
+ #include <linux/platform_device.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/regulator/consumer.h>
++#include <linux/reset.h>
+ #include <linux/thermal.h>
+ 
+ #include "etnaviv_cmdbuf.h"
+@@ -172,6 +173,29 @@ int etnaviv_gpu_get_param(struct etnaviv_gpu *gpu, u32 param, u64 *value)
+ 	return 0;
+ }
+ 
++static int etnaviv_gpu_reset_deassert(struct etnaviv_gpu *gpu)
++{
++	int ret;
++
++	/*
++	 * 32 core clock cycles (slowest clock) required before deassertion
++	 * 1 microsecond might match all implementations without computation
++	 */
++	usleep_range(1, 2);
++
++	ret = reset_control_deassert(gpu->rst);
++	if (ret)
++		return ret;
++
++	/*
++	 * 128 core clock cycles (slowest clock) required before any activity on AHB
++	 * 1 microsecond might match all implementations without computation
++	 */
++	usleep_range(1, 2);
++
++	return 0;
++}
++
+ static inline bool etnaviv_is_model_rev(struct etnaviv_gpu *gpu, u32 model, u32 revision)
+ {
+ 	return gpu->identity.model == model &&
+@@ -799,6 +823,12 @@ int etnaviv_gpu_init(struct etnaviv_gpu *gpu)
+ 		goto pm_put;
+ 	}
+ 
++	ret = etnaviv_gpu_reset_deassert(gpu);
++	if (ret) {
++		dev_err(gpu->dev, "GPU reset deassert failed\n");
++		goto fail;
++	}
++
+ 	etnaviv_hw_identify(gpu);
+ 
+ 	if (gpu->identity.model == 0) {
+@@ -1871,6 +1901,16 @@ static int etnaviv_gpu_platform_probe(struct platform_device *pdev)
+ 	if (IS_ERR(gpu->mmio))
+ 		return PTR_ERR(gpu->mmio);
+ 
++	/* Get Reset: */
++	gpu->rst = devm_reset_control_get_optional_exclusive(&pdev->dev, NULL);
++	if (IS_ERR(gpu->rst))
++		return dev_err_probe(dev, PTR_ERR(gpu->rst),
++				      "failed to get reset\n");
++
++	err = reset_control_assert(gpu->rst);
++	if (err)
++		return dev_err_probe(dev, err, "failed to assert reset\n");
++
+ 	/* Get Interrupt: */
+ 	gpu->irq = platform_get_irq(pdev, 0);
+ 	if (gpu->irq < 0)
+diff --git a/drivers/gpu/drm/etnaviv/etnaviv_gpu.h b/drivers/gpu/drm/etnaviv/etnaviv_gpu.h
+index 31322195b..d0bdb393e 100644
+--- a/drivers/gpu/drm/etnaviv/etnaviv_gpu.h
++++ b/drivers/gpu/drm/etnaviv/etnaviv_gpu.h
+@@ -93,6 +93,7 @@ struct etnaviv_event {
+ struct etnaviv_cmdbuf_suballoc;
+ struct regulator;
+ struct clk;
++struct reset_control;
+ 
+ #define ETNA_NR_EVENTS 30
+ 
+@@ -157,6 +158,7 @@ struct etnaviv_gpu {
+ 	struct clk *clk_reg;
+ 	struct clk *clk_core;
+ 	struct clk *clk_shader;
++	struct reset_control *rst;
+ 
+ 	unsigned int freq_scale;
+ 	unsigned int fe_waitcycles;
+-- 
+2.43.0
+
