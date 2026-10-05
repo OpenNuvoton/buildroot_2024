@@ -1,0 +1,48 @@
+From: yclu4 <yclu4@nuvoton.com>
+Date: Mon, 24 Aug 2026 00:00:00 +0800
+Subject: [PATCH] compositor/wayland-egl: define QT_EGL_NO_X11 for no-X11 targets
+
+Mesa's eglplatform.h selects the EGL native type by probing preprocessor
+macros in order:
+  WL_EGL_PLATFORM -> Wayland types
+  __GBM__         -> GBM types
+  USE_OZONE       -> intptr_t stubs
+  USE_X11         -> includes <X11/Xlib.h>
+  __unix__        -> void* fallback (only if none of the above match)
+
+When the compositor wayland-egl hardware-integration plugin is compiled,
+none of the Wayland/GBM/Ozone guards appear in CXXFLAGS (egl.pc Cflags is
+empty on Mesa), so the header falls through to USE_X11 and tries to include
+<X11/Xlib.h>. On an embedded target without X11 headers this is a fatal
+error.
+
+Qt5Base already solves the same problem for its own EGL support code with
+-DQT_EGL_NO_X11, which makes QtEglSupport use safe internal typedefs
+instead of the raw eglplatform.h types. Add the same define to
+wayland-egl.pri so the compositor plugin compiles cleanly without an X11
+sysroot.
+
+Signed-off-by: yclu4 <yclu4@nuvoton.com>
+---
+ src/hardwareintegration/compositor/wayland-egl/wayland-egl.pri | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/src/hardwareintegration/compositor/wayland-egl/wayland-egl.pri b/src/hardwareintegration/compositor/wayland-egl/wayland-egl.pri
+index 1234567..abcdefg 100644
+--- a/src/hardwareintegration/compositor/wayland-egl/wayland-egl.pri
++++ b/src/hardwareintegration/compositor/wayland-egl/wayland-egl.pri
+@@ -4,6 +4,14 @@
+ 
+ QT += egl_support-private
+ 
++# Mesa's eglplatform.h has no safe fallback for non-X11 embedded targets:
++# if none of WL_EGL_PLATFORM / __GBM__ / USE_OZONE / ANDROID is defined it
++# falls through to USE_X11 and includes <X11/Xlib.h>, which does not exist
++# in this sysroot.  Qt5Base already guards its own EGL support code with
++# QT_EGL_NO_X11; apply the same define here so the compositor wayland-egl
++# hardware-integration plugin compiles cleanly without an X11 sysroot.
++DEFINES += QT_EGL_NO_X11
++
+ SOURCES += \
+     $$PWD/waylandeglclientbufferintegration.cpp
+ 
