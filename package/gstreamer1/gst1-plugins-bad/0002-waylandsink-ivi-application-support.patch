@@ -1,0 +1,459 @@
+From a67c2b5404efbce8344911482e30c55a71454b30 Mon Sep 17 00:00:00 2001
+From: yclu4 <yclu4@nuvoton.com>
+Date: Tue, 15 Sep 2026 11:39:07 +0800
+Subject: [PATCH] waylandsink: add ivi_application surface-role support
+
+Adds an ivi_surface role path in gst-libs/gst/wayland/ (gstwldisplay.c,
+gstwlwindow.c) alongside the existing xdg_wm_base/xdg_toplevel path, so
+waylandsink can run under ivi-shell (Weston ivi-shell.so) as well as
+kiosk-shell (xdg_shell).
+
+- gstwldisplay.{c,h}: bind ivi_application in the registry listener,
+  expose gst_wl_display_get_ivi_application().
+- gstwlwindow.c: in gst_wl_window_new_toplevel(), if ivi_application is
+  bound, create an ivi_surface (ivi_application_surface_create()) on
+  area_surface instead of xdg_surface/xdg_toplevel. ivi_surface id is
+  read from GST_WAYLANDSINK_IVI_SURFACE_ID (default 1000, matching this
+  product's weston-ivi.ini video/primary layer id). Falls through to
+  the unchanged xdg_wm_base path when ivi_application is not bound
+  (kiosk-shell) -- byte-for-byte unchanged behavior in that case.
+  gst_wl_window_ensure_fullscreen() is a no-op under ivi-shell (no
+  xdg_toplevel-style fullscreen concept there).
+- gstwlwindow.c: do NOT block waiting for ivi_surface.configure (unlike
+  the xdg_surface path, where the compositor configures near-instantly).
+  ivi-shell's configure round trip measured at 100-190ms on this
+  hardware -- long enough that the previous blocking-wait-with-100ms-
+  timeout implementation stalled the first render call long enough for
+  several buffers to pile up and get dropped by waylandsink's own
+  redraw_pending QoS gate, which could wedge small fixed-size upstream
+  ring buffers (observed with wayland/tests/gst_dmabuf_video at 30fps).
+  Mark configured=TRUE immediately after the commit instead (mirrors
+  the existing 'eager configure' pattern already used by the QPA
+  transport, qetnaviv2dwaylandtransport.cpp, for the same protocol
+  behavior) -- the real configure event, whenever it arrives, is a
+  harmless no-op.
+- meson.build: vendor protocol/ivi-application.xml (Weston/AGL
+  extension, not part of upstream wayland-protocols) and generate its
+  client bindings the same way as the other protocols.
+
+See /home/joeylu/opencode/graphic/drm-2d-gc520/ivi/plan.md for full
+design rationale and verification plan.
+---
+ gst-libs/gst/wayland/gstwldisplay.c           |  27 ++++-
+ gst-libs/gst/wayland/gstwldisplay.h           |   8 ++
+ gst-libs/gst/wayland/gstwlwindow.c            | 110 +++++++++++++++++-
+ gst-libs/gst/wayland/meson.build              |  16 +++
+ .../gst/wayland/protocol/ivi-application.xml  | 100 ++++++++++++++++
+ 5 files changed, 254 insertions(+), 7 deletions(-)
+ create mode 100644 gst-libs/gst/wayland/protocol/ivi-application.xml
+
+diff --git a/gst-libs/gst/wayland/gstwldisplay.c b/gst-libs/gst/wayland/gstwldisplay.c
+index 1f83cb2..b467a5e 100644
+--- a/gst-libs/gst/wayland/gstwldisplay.c
++++ b/gst-libs/gst/wayland/gstwldisplay.c
+@@ -28,6 +28,7 @@
+ #include "linux-dmabuf-unstable-v1-client-protocol.h"
+ #include "viewporter-client-protocol.h"
+ #include "xdg-shell-client-protocol.h"
++#include "ivi-application-client-protocol.h"
+ 
+ #include <errno.h>
+ 
+@@ -47,6 +48,10 @@ typedef struct _GstWlDisplayPrivate
+   struct wl_subcompositor *subcompositor;
+   struct xdg_wm_base *xdg_wm_base;
+   struct zwp_fullscreen_shell_v1 *fullscreen_shell;
++  /* ivi_application: Weston/AGL ivi-shell extension, bound opportunistically.
++   * NULL under kiosk-shell (xdg_wm_base-only) compositors -- see
++   * gst_wl_display_get_ivi_application(). */
++  struct ivi_application *ivi_application;
+   struct wl_shm *shm;
+   struct wp_viewporter *viewporter;
+   struct zwp_linux_dmabuf_v1 *dmabuf;
+@@ -139,6 +144,9 @@ gst_wl_display_finalize (GObject * gobject)
+   if (priv->xdg_wm_base)
+     xdg_wm_base_destroy (priv->xdg_wm_base);
+ 
++  if (priv->ivi_application)
++    ivi_application_destroy (priv->ivi_application);
++
+   if (priv->fullscreen_shell)
+     zwp_fullscreen_shell_v1_release (priv->fullscreen_shell);
+ 
+@@ -266,6 +274,11 @@ registry_handle_global (void *data, struct wl_registry *registry,
+     priv->xdg_wm_base =
+         wl_registry_bind (registry, id, &xdg_wm_base_interface, 1);
+     xdg_wm_base_add_listener (priv->xdg_wm_base, &xdg_wm_base_listener, self);
++  } else if (g_strcmp0 (interface, "ivi_application") == 0) {
++    /* ivi-shell only: lets us create ivi_surface roles instead of
++     * xdg_toplevel. No listener needed -- ivi_application has no events. */
++    priv->ivi_application =
++        wl_registry_bind (registry, id, &ivi_application_interface, 1);
+   } else if (g_strcmp0 (interface, "zwp_fullscreen_shell_v1") == 0) {
+     priv->fullscreen_shell = wl_registry_bind (registry, id,
+         &zwp_fullscreen_shell_v1_interface, 1);
+@@ -408,13 +421,13 @@ gst_wl_display_new_existing (struct wl_display * display,
+     g_warning ("Could not bind to zwp_linux_dmabuf_v1");
+   }
+ 
+-  if (!priv->xdg_wm_base && !priv->fullscreen_shell) {
++  if (!priv->xdg_wm_base && !priv->fullscreen_shell && !priv->ivi_application) {
+     /* If wl_surface and wl_display are passed via GstContext
+      * xdg_shell and zwp_fullscreen_shell are not used.
+      * In this case is correct to continue.
+      */
+-    g_warning ("Could not bind to either xdg_wm_base or zwp_fullscreen_shell, "
+-        "video display may not work properly.");
++    g_warning ("Could not bind to any of xdg_wm_base, ivi_application or "
++        "zwp_fullscreen_shell, video display may not work properly.");
+   }
+ 
+   priv->thread = g_thread_try_new ("GstWlDisplay", gst_wl_display_thread_run,
+@@ -510,6 +523,14 @@ gst_wl_display_get_xdg_wm_base (GstWlDisplay * self)
+   return priv->xdg_wm_base;
+ }
+ 
++struct ivi_application *
++gst_wl_display_get_ivi_application (GstWlDisplay * self)
++{
++  GstWlDisplayPrivate *priv = gst_wl_display_get_instance_private (self);
++
++  return priv->ivi_application;
++}
++
+ struct zwp_fullscreen_shell_v1 *
+ gst_wl_display_get_fullscreen_shell_v1 (GstWlDisplay * self)
+ {
+diff --git a/gst-libs/gst/wayland/gstwldisplay.h b/gst-libs/gst/wayland/gstwldisplay.h
+index eb07e4f..992ab35 100644
+--- a/gst-libs/gst/wayland/gstwldisplay.h
++++ b/gst-libs/gst/wayland/gstwldisplay.h
+@@ -76,6 +76,14 @@ struct wl_subcompositor *gst_wl_display_get_subcompositor (GstWlDisplay * self);
+ GST_WL_API
+ struct xdg_wm_base *gst_wl_display_get_xdg_wm_base (GstWlDisplay * self);
+ 
++/* ivi_application is a Weston/AGL ivi-shell extension protocol (not part of
++ * upstream wayland-protocols). It is bound opportunistically alongside
++ * xdg_wm_base -- compositors that only implement xdg_shell will simply never
++ * advertise it, and this accessor will return NULL. See gstwlwindow.c for the
++ * surface-role selection that uses it. */
++GST_WL_API
++struct ivi_application *gst_wl_display_get_ivi_application (GstWlDisplay * self);
++
+ GST_WL_API
+ struct zwp_fullscreen_shell_v1 *gst_wl_display_get_fullscreen_shell_v1 (GstWlDisplay * self);
+ 
+diff --git a/gst-libs/gst/wayland/gstwlwindow.c b/gst-libs/gst/wayland/gstwlwindow.c
+index 0023d4e..1fff015 100644
+--- a/gst-libs/gst/wayland/gstwlwindow.c
++++ b/gst-libs/gst/wayland/gstwlwindow.c
+@@ -29,6 +29,15 @@
+ #include "fullscreen-shell-unstable-v1-client-protocol.h"
+ #include "viewporter-client-protocol.h"
+ #include "xdg-shell-client-protocol.h"
++#include "ivi-application-client-protocol.h"
++
++/* Surface ID used for ivi_application_surface_create() when running under
++ * ivi-shell. Overridable via GST_WAYLANDSINK_IVI_SURFACE_ID so a pipeline
++ * can be routed to a different ivi-shell layer/z-order slot; defaults to
++ * 1000, which is this product's video/primary ivi-shell layer id (see
++ * package/weston/weston-ivi.ini [nuvoton-layer] id=1000, and the paired
++ * Qt UI default of 2000 in QT_IVI_SURFACE_ID). */
++#define GST_WL_WINDOW_DEFAULT_IVI_SURFACE_ID 1000
+ 
+ #define GST_CAT_DEFAULT gst_wl_window_debug
+ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
+@@ -50,6 +59,7 @@ typedef struct _GstWlWindowPrivate
+   struct wp_viewport *video_viewport;
+   struct xdg_surface *xdg_surface;
+   struct xdg_toplevel *xdg_toplevel;
++  struct ivi_surface *ivi_surface;
+   gboolean configured;
+   GCond configure_cond;
+   GMutex configure_mutex;
+@@ -151,6 +161,34 @@ static const struct xdg_surface_listener xdg_surface_listener = {
+   handle_xdg_surface_configure,
+ };
+ 
++/* ivi_surface configure -- ivi-shell only fires this after the first
++ * wl_surface.commit (unlike xdg_surface, which configures immediately on
++ * role creation), and it always reports 0x0 (the size is not meaningful for
++ * ivi-shell, which does not negotiate window geometry with the client the
++ * way xdg_shell does -- the render_rectangle is instead driven entirely by
++ * gst_wl_window_set_render_rectangle(), same as the fullscreen_shell path
++ * below). We simply mark ourselves configured and let the caller's existing
++ * timeout-based wait in gst_wl_window_new_toplevel() complete normally. */
++static void
++handle_ivi_surface_configure (void *data, struct ivi_surface *ivi_surface,
++    int32_t width, int32_t height)
++{
++  GstWlWindow *self = data;
++  GstWlWindowPrivate *priv = gst_wl_window_get_instance_private (self);
++
++  GST_DEBUG ("ivi_surface got a \"configure\" event, [ %d, %d ].",
++      width, height);
++
++  g_mutex_lock (&priv->configure_mutex);
++  priv->configured = TRUE;
++  g_cond_signal (&priv->configure_cond);
++  g_mutex_unlock (&priv->configure_mutex);
++}
++
++static const struct ivi_surface_listener ivi_surface_listener = {
++  handle_ivi_surface_configure,
++};
++
+ static void
+ gst_wl_window_class_init (GstWlWindowClass * klass)
+ {
+@@ -184,6 +222,8 @@ gst_wl_window_finalize (GObject * gobject)
+     xdg_toplevel_destroy (priv->xdg_toplevel);
+   if (priv->xdg_surface)
+     xdg_surface_destroy (priv->xdg_surface);
++  if (priv->ivi_surface)
++    ivi_surface_destroy (priv->ivi_surface);
+ 
+   if (priv->video_viewport)
+     wp_viewport_destroy (priv->video_viewport);
+@@ -265,6 +305,13 @@ gst_wl_window_ensure_fullscreen (GstWlWindow * self, gboolean fullscreen)
+   g_return_if_fail (self);
+ 
+   priv = gst_wl_window_get_instance_private (self);
++
++  /* ivi-shell has no xdg_toplevel-style fullscreen concept -- window
++   * geometry/stacking there is driven entirely by the compositor's layer
++   * management (see nu-hmi-controller), not negotiated with the client. */
++  if (!priv->xdg_toplevel)
++    return;
++
+   if (fullscreen)
+     xdg_toplevel_set_fullscreen (priv->xdg_toplevel, NULL);
+   else
+@@ -278,16 +325,71 @@ gst_wl_window_new_toplevel (GstWlDisplay * display, const GstVideoInfo * info,
+   GstWlWindow *self;
+   GstWlWindowPrivate *priv;
+   struct xdg_wm_base *xdg_wm_base;
++  struct ivi_application *ivi_application;
+   struct zwp_fullscreen_shell_v1 *fullscreen_shell;
+ 
+   self = gst_wl_window_new_internal (display, render_lock);
+   priv = gst_wl_window_get_instance_private (self);
+ 
+   xdg_wm_base = gst_wl_display_get_xdg_wm_base (display);
++  ivi_application = gst_wl_display_get_ivi_application (display);
+   fullscreen_shell = gst_wl_display_get_fullscreen_shell_v1 (display);
+ 
+-  /* Check which protocol we will use (in order of preference) */
+-  if (xdg_wm_base) {
++  /* Check which protocol we will use (in order of preference).
++   * ivi_application is checked first: ivi-shell compositors advertise both
++   * ivi_application and xdg_wm_base (the latter for kiosk/desktop clients
++   * that don't know about ivi_application), so we must not fall through to
++   * xdg_toplevel just because xdg_wm_base also happens to be present. */
++  if (ivi_application) {
++    uint32_t ivi_surface_id = GST_WL_WINDOW_DEFAULT_IVI_SURFACE_ID;
++    const gchar *env = g_getenv ("GST_WAYLANDSINK_IVI_SURFACE_ID");
++
++    if (env) {
++      guint64 v = g_ascii_strtoull (env, NULL, 10);
++      if (v > 0 && v <= G_MAXUINT32)
++        ivi_surface_id = (uint32_t) v;
++      else
++        GST_WARNING ("Invalid GST_WAYLANDSINK_IVI_SURFACE_ID '%s', using "
++            "default %u", env, GST_WL_WINDOW_DEFAULT_IVI_SURFACE_ID);
++    }
++
++    priv->ivi_surface = ivi_application_surface_create (ivi_application,
++        ivi_surface_id, priv->area_surface);
++    if (!priv->ivi_surface) {
++      GST_ERROR ("Unable to get ivi_surface");
++      goto error;
++    }
++    ivi_surface_add_listener (priv->ivi_surface, &ivi_surface_listener, self);
++
++    GST_INFO ("ivi-shell mode: ivi_surface id=%u", ivi_surface_id);
++
++    /* Do NOT block waiting for the ivi_surface.configure event here.
++     *
++     * Unlike xdg_surface (which the compositor configures essentially
++     * immediately, before any content is even attached), ivi-shell only
++     * sends ivi_surface.configure *after* this first commit reaches the
++     * compositor and is processed by ivi-layout -- a real round trip that
++     * has been measured at 100-190ms on this hardware, i.e. comparable to
++     * or longer than a single frame period at 30fps. Blocking here (as the
++     * xdg_wm_base path below does, where the wait is essentially a
++     * formality that resolves in <1ms) stalls the first gst_wl_window_render()
++     * call long enough that several buffers pile up upstream and get
++     * dropped by gst_wayland_sink_show_frame()'s redraw_pending QoS gate,
++     * which can wedge a small fixed-size upstream ring buffer permanently
++     * (seen with wayland/tests/gst_dmabuf_video, whose 3-slot round-robin
++     * ring has no buffer ever released to unstick it).
++     *
++     * The QPA transport (qetnaviv2dwaylandtransport.cpp) already established
++     * the correct pattern for this exact protocol behavior: mark ourselves
++     * configured immediately and treat the eventual real configure event
++     * (handle_ivi_surface_configure(), always advisory/0x0-capable per the
++     * protocol) as a no-op. The video's actual size is already known from
++     * the GstVideoInfo passed into this function, so there is no geometry
++     * to actually wait for. */
++    priv->configured = TRUE;
++    wl_surface_commit (priv->area_surface);
++    wl_display_flush (gst_wl_display_get_display (display));
++  } else if (xdg_wm_base) {
+     gint64 timeout;
+ 
+     /* First create the XDG surface */
+@@ -335,7 +437,7 @@ gst_wl_window_new_toplevel (GstWlDisplay * display, const GstVideoInfo * info,
+ 
+   /* render_rectangle is already set via toplevel_configure in
+    * xdg_shell fullscreen mode */
+-  if (!(xdg_wm_base && fullscreen)) {
++  if (!(xdg_wm_base && !ivi_application && fullscreen)) {
+     /* set the initial size to be the same as the reported video size */
+     gint width =
+         gst_util_uint64_scale_int_round (info->width, info->par_n, info->par_d);
+@@ -418,7 +520,7 @@ gst_wl_window_is_toplevel (GstWlWindow * self)
+   g_return_val_if_fail (self != NULL, FALSE);
+ 
+   priv = gst_wl_window_get_instance_private (self);
+-  return (priv->xdg_toplevel != NULL);
++  return (priv->xdg_toplevel != NULL || priv->ivi_surface != NULL);
+ }
+ 
+ static void
+diff --git a/gst-libs/gst/wayland/meson.build b/gst-libs/gst/wayland/meson.build
+index 5eb4484..16228df 100644
+--- a/gst-libs/gst/wayland/meson.build
++++ b/gst-libs/gst/wayland/meson.build
+@@ -58,6 +58,22 @@ if use_wayland
+         command : [wl_scanner, 'client-header', '@INPUT@', '@OUTPUT@'])]
+   endforeach
+ 
++  # ivi_application is a Weston/AGL extension protocol, not part of upstream
++  # wayland-protocols, so it is vendored locally (protocol/ivi-application.xml,
++  # same file shipped by weston-10.0.5/protocol/) rather than looked up via
++  # wl_protocol_dep's pkgdatadir like the protocols above.
++  ivi_application_xml = 'protocol/ivi-application.xml'
++
++  protocols_files += [custom_target('ivi-application-protocol.c',
++    output : 'ivi-application-protocol.c',
++    input : ivi_application_xml,
++    command : [wl_scanner, 'code', '@INPUT@', '@OUTPUT@'])]
++
++  protocols_files += [custom_target('ivi-application-client-protocol.h',
++    output : 'ivi-application-client-protocol.h',
++    input : ivi_application_xml,
++    command : [wl_scanner, 'client-header', '@INPUT@', '@OUTPUT@'])]
++
+   extra_c_args = [
+     '-DGST_USE_UNSTABLE_API',
+     '-DBUILDING_GST_WL',
+diff --git a/gst-libs/gst/wayland/protocol/ivi-application.xml b/gst-libs/gst/wayland/protocol/ivi-application.xml
+new file mode 100644
+index 0000000..17e3984
+--- /dev/null
++++ b/gst-libs/gst/wayland/protocol/ivi-application.xml
+@@ -0,0 +1,100 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<protocol name="ivi_application">
++
++  <copyright>
++    Copyright (C) 2013 DENSO CORPORATION
++    Copyright (c) 2013 BMW Car IT GmbH
++
++    Permission is hereby granted, free of charge, to any person obtaining a
++    copy of this software and associated documentation files (the "Software"),
++    to deal in the Software without restriction, including without limitation
++    the rights to use, copy, modify, merge, publish, distribute, sublicense,
++    and/or sell copies of the Software, and to permit persons to whom the
++    Software is furnished to do so, subject to the following conditions:
++
++    The above copyright notice and this permission notice (including the next
++    paragraph) shall be included in all copies or substantial portions of the
++    Software.
++
++    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
++    THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
++    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
++    DEALINGS IN THE SOFTWARE.
++  </copyright>
++
++  <interface name="ivi_surface" version="1">
++    <description summary="application interface to surface in ivi compositor"/>
++
++    <request name="destroy" type="destructor">
++      <description summary="destroy ivi_surface">
++        This removes the link from ivi_id to wl_surface and destroys ivi_surface.
++        The ID, ivi_id, is free and can be used for surface_create again.
++      </description>
++    </request>
++
++    <event name="configure">
++      <description summary="suggest resize">
++        The configure event asks the client to resize its surface.
++
++        The size is a hint, in the sense that the client is free to
++        ignore it if it doesn't resize, pick a smaller size (to
++        satisfy aspect ratio or resize in steps of NxM pixels).
++
++        The client is free to dismiss all but the last configure
++        event it received.
++
++        The width and height arguments specify the size of the window
++        in surface-local coordinates.
++      </description>
++      <arg name="width" type="int"/>
++      <arg name="height" type="int"/>
++    </event>
++  </interface>
++
++  <interface name="ivi_application" version="1">
++    <description summary="create ivi-style surfaces">
++      This interface is exposed as a global singleton.
++      This interface is implemented by servers that provide IVI-style user interfaces.
++      It allows clients to associate an ivi_surface with wl_surface.
++    </description>
++
++    <enum name="error">
++      <entry name="role" value="0" summary="given wl_surface has another role"/>
++      <entry name="ivi_id" value="1" summary="given ivi_id is assigned to another wl_surface"/>
++    </enum>
++
++    <request name="surface_create">
++      <description summary="create ivi_surface with numeric ID in ivi compositor">
++        This request gives the wl_surface the role of an IVI Surface. Creating more than
++        one ivi_surface for a wl_surface is not allowed. Note, that this still allows the
++        following example:
++
++         1. create a wl_surface
++         2. create ivi_surface for the wl_surface
++         3. destroy the ivi_surface
++         4. create ivi_surface for the wl_surface (with the same or another ivi_id as before)
++
++        surface_create will create an interface:ivi_surface with numeric ID; ivi_id in
++        ivi compositor. These ivi_ids are defined as unique in the system to identify
++        it inside of ivi compositor. The ivi compositor implements business logic how to
++        set properties of the surface with ivi_id according to the status of the system.
++        E.g. a unique ID for Car Navigation application is used for implementing special
++        logic of the application about where it shall be located.
++        The server regards the following cases as protocol errors and disconnects the client.
++         - wl_surface already has another role.
++         - ivi_id is already assigned to another wl_surface.
++
++        If client destroys ivi_surface or wl_surface which is assigned to the ivi_surface,
++        ivi_id which is assigned to the ivi_surface is free for reuse.
++      </description>
++      <arg name="ivi_id" type="uint"/>
++      <arg name="surface" type="object" interface="wl_surface"/>
++      <arg name="id" type="new_id" interface="ivi_surface"/>
++    </request>
++
++  </interface>
++
++</protocol>
+-- 
+2.43.0
+
