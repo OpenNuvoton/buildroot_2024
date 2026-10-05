@@ -1,0 +1,125 @@
+From 11157efdbc0805aa5a561ca58767ac8c40e70a3e Mon Sep 17 00:00:00 2001
+From: yclu4 <yclu4@nuvoton.com>
+Date: Tue, 15 Sep 2026 17:29:37 +0800
+Subject: [PATCH] drm-backend: allocate hw cursor-plane GBM buffers under
+ pixman renderer
+
+drm_output_init_cursor_egl()/drm_output_fini_cursor_egl() were only ever
+called from the EGL/GBM output-init path, so output->gbm_cursor_fb[] stayed
+NULL when running the pixman renderer (our stack has no GL renderer). The
+first wl_pointer.set_cursor() from a client would then dereference a NULL fb
+in the cursor-plane placement path (state-propose.c).
+
+Despite the _egl suffix, these functions only need b->gbm (already created
+by drm_output_init_pixman() for dmabuf import) and require no EGL context.
+Make them non-static and call them from drm_output_init_pixman()/
+drm_output_fini_pixman() so the hardware cursor plane works under pixman
+too. Failure is non-fatal: drm_output_init_cursor_egl() already sets
+b->cursors_are_broken on error for a clean software-cursor fallback.
+
+---
+ libweston/backend-drm/drm-gbm.c      |  4 ++--
+ libweston/backend-drm/drm-internal.h | 25 +++++++++++++++++++++++++
+ libweston/backend-drm/drm.c          | 14 ++++++++++++++
+ 3 files changed, 41 insertions(+), 2 deletions(-)
+
+diff --git a/libweston/backend-drm/drm-gbm.c b/libweston/backend-drm/drm-gbm.c
+index d0a4c6c..41ea2a5 100644
+--- a/libweston/backend-drm/drm-gbm.c
++++ b/libweston/backend-drm/drm-gbm.c
+@@ -132,7 +132,7 @@ init_egl(struct drm_backend *b)
+ 	return 0;
+ }
+ 
+-static void drm_output_fini_cursor_egl(struct drm_output *output)
++void drm_output_fini_cursor_egl(struct drm_output *output)
+ {
+ 	unsigned int i;
+ 
+@@ -142,7 +142,7 @@ static void drm_output_fini_cursor_egl(struct drm_output *output)
+ 	}
+ }
+ 
+-static int
++int
+ drm_output_init_cursor_egl(struct drm_output *output, struct drm_backend *b)
+ {
+ 	unsigned int i;
+diff --git a/libweston/backend-drm/drm-internal.h b/libweston/backend-drm/drm-internal.h
+index 4860088..95ff745 100644
+--- a/libweston/backend-drm/drm-internal.h
++++ b/libweston/backend-drm/drm-internal.h
+@@ -834,6 +834,20 @@ drm_output_init_egl(struct drm_output *output, struct drm_backend *b);
+ void
+ drm_output_fini_egl(struct drm_output *output);
+ 
++/*
++ * Cursor-plane GBM buffer allocation. Despite the _egl suffix (kept for
++ * historical/naming consistency with drm_output_init_egl), these only need
++ * b->gbm (a plain GBM device used for dumb/cursor BO allocation) and do NOT
++ * require an EGL context. They are therefore also usable from the pixman
++ * renderer's per-output init path (drm_output_init_pixman()) as long as
++ * init_pixman() has already created b->gbm - see drm.c.
++ */
++int
++drm_output_init_cursor_egl(struct drm_output *output, struct drm_backend *b);
++
++void
++drm_output_fini_cursor_egl(struct drm_output *output);
++
+ struct drm_fb *
+ drm_output_render_gl(struct drm_output_state *state, pixman_region32_t *damage);
+ 
+@@ -859,6 +873,17 @@ drm_output_fini_egl(struct drm_output *output)
+ {
+ }
+ 
++inline static int
++drm_output_init_cursor_egl(struct drm_output *output, struct drm_backend *b)
++{
++	return -1;
++}
++
++inline static void
++drm_output_fini_cursor_egl(struct drm_output *output)
++{
++}
++
+ inline static struct drm_fb *
+ drm_output_render_gl(struct drm_output_state *state, pixman_region32_t *damage)
+ {
+diff --git a/libweston/backend-drm/drm.c b/libweston/backend-drm/drm.c
+index 92ccfa4..0cdff8e 100644
+--- a/libweston/backend-drm/drm.c
++++ b/libweston/backend-drm/drm.c
+@@ -1215,6 +1215,18 @@ drm_output_init_pixman(struct drm_output *output, struct drm_backend *b)
+ 	if (pixman_renderer_output_create(&output->base, &options) < 0)
+  		goto err;
+ 
++	/* Allocate cursor-plane scratch GBM buffers so the hardware cursor
++	 * plane can be used under the pixman renderer too. drm_output_init_cursor_egl()
++	 * only needs b->gbm (already created by init_pixman() above for
++	 * dmabuf import) - it does not require an EGL context, despite the
++	 * name. Without this, output->gbm_cursor_fb[] stays NULL and the
++	 * first wl_pointer.set_cursor() from a client would dereference a
++	 * NULL fb in the DRM backend's cursor-plane path. Failure here is
++	 * non-fatal: drm_output_init_cursor_egl() already sets
++	 * b->cursors_are_broken on error, causing clean fallback to a
++	 * software (blitted) cursor. */
++	drm_output_init_cursor_egl(output, b);
++
+ 	weston_log("DRM: output %s %s shadow framebuffer.\n", output->base.name,
+ 		   b->use_pixman_shadow ? "uses" : "does not use");
+ 
+@@ -1254,6 +1266,8 @@ drm_output_fini_pixman(struct drm_output *output)
+ 	pixman_renderer_output_destroy(&output->base);
+ 	pixman_region32_fini(&output->previous_damage);
+ 
++	drm_output_fini_cursor_egl(output);
++
+ 	for (i = 0; i < ARRAY_LENGTH(output->dumb); i++) {
+ 		pixman_image_unref(output->image[i]);
+ 		drm_fb_unref(output->dumb[i]);
+-- 
+2.43.0
+

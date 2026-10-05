@@ -1,0 +1,212 @@
+From d83c3bf978921b8279a7343ed1b70c18254eb04a Mon Sep 17 00:00:00 2001
+From: yclu4 <yclu4@nuvoton.com>
+Date: Tue, 15 Sep 2026 17:29:37 +0800
+Subject: [PATCH] drm/pixman: advertise KMS plane formats via
+ zwp_linux_dmabuf_v1; accept MOD_INVALID as LINEAR
+
+Four related fixes needed for gst_dmabuf_video (DRM dumb BO appsrc) to
+reach hardware planes via waylandsink under the pixman renderer:
+
+include/libweston/libweston.h:
+  Add get_scanout_formats_hook to weston_compositor.  Optional backend
+  callback returning the union of KMS plane format/modifier pairs for use
+  in zwp_linux_dmabuf_v1 advertisement when the renderer cannot enumerate
+  them (pixman has no get_supported_formats).
+
+libweston/backend-drm/drm.c:
+  In init_pixman(), register get_scanout_formats_pixman_hook as the new
+  compositor hook.  The hook walks b->plane_list (skipping cursor planes)
+  and returns the union of all plane format arrays - the exact set the
+  kernel will accept for direct scanout.  Called per-client-bind after
+  create_sprites() has populated the plane list.
+
+libweston/linux-dmabuf.c:
+  In bind_linux_dmabuf(), when renderer->get_supported_formats is NULL,
+  fall back to compositor->get_scanout_formats_hook.  Iterates the
+  returned format/modifier array and sends zwp_linux_dmabuf_v1 format
+  and modifier events to the client.  Without this, waylandsink sees an
+  empty DMABuf format list and falls back to SHM (no plane promotion).
+
+libweston/backend-drm/fb.c:
+  In drm_fb_get_from_dmabuf(), treat DRM_FORMAT_MOD_INVALID as
+  DRM_FORMAT_MOD_LINEAR instead of rejecting the buffer.  DRM dumb BOs
+  are always linear (kernel API guarantee); GStreamer <= 1.22
+  gst_dmabuf_allocator does not carry modifier metadata, so it submits
+  MOD_INVALID.  This allows dumb-BO DMABufs to reach KMS scanout.
+---
+ include/libweston/libweston.h |  7 ++++++
+ libweston/backend-drm/drm.c   | 45 +++++++++++++++++++++++++++++++++++
+ libweston/backend-drm/fb.c    | 14 +++++++----
+ libweston/linux-dmabuf.c      | 41 +++++++++++++++++++++++++++----
+ 4 files changed, 97 insertions(+), 10 deletions(-)
+
+diff --git a/include/libweston/libweston.h b/include/libweston/libweston.h
+index 2174d34..9d09b4c 100644
+--- a/include/libweston/libweston.h
++++ b/include/libweston/libweston.h
+@@ -1160,6 +1160,13 @@ struct weston_compositor {
+ 	void *user_data;
+ 	void (*exit)(struct weston_compositor *c);
+ 
++	/* Optional hook: return the union of format/modifier pairs that can be
++	 * directly scanned out via KMS planes, for use in zwp_linux_dmabuf_v1
++	 * format advertisement when the renderer cannot enumerate them (e.g.
++	 * pixman mode).  The returned array is owned by the caller; free with
++	 * weston_drm_format_array_fini() + free().  NULL = not set. */
++	struct weston_drm_format_array *(*get_scanout_formats_hook)(struct weston_compositor *ec);
++
+ 	/* Whether to let the compositor run without any input device. */
+ 	bool require_input;
+ 
+diff --git a/libweston/backend-drm/drm.c b/libweston/backend-drm/drm.c
+index 4eac092..92ccfa4 100644
+--- a/libweston/backend-drm/drm.c
++++ b/libweston/backend-drm/drm.c
+@@ -737,6 +737,10 @@ drm_output_switch_mode(struct weston_output *output_base, struct weston_mode *mo
+ 	return 0;
+ }
+ 
++/* Forward declaration - defined after create_sprites() populates plane_list */
++static struct weston_drm_format_array *
++get_scanout_formats_pixman_hook(struct weston_compositor *ec);
++
+ static int
+ init_pixman(struct drm_backend *b)
+ {
+@@ -764,6 +768,14 @@ init_pixman(struct drm_backend *b)
+ 		weston_log("DRM: GBM initialized for dmabuf scanout (pixman renderer).\n");
+ #endif
+ 
++	/* Advertise scanout-capable KMS plane formats via zwp_linux_dmabuf_v1
++	 * so that clients like waylandsink can negotiate dmabuf NV12 buffers
++	 * for direct plane promotion, even without a GL renderer.
++	 * Note: plane_list is populated by create_sprites() which runs before
++	 * linux_dmabuf_setup(); the hook is queried per-client-bind so the
++	 * plane list is fully populated when it is first called. */
++	b->compositor->get_scanout_formats_hook = get_scanout_formats_pixman_hook;
++
+ 	return 0;
+ }
+ 
+@@ -1762,6 +1774,39 @@ err:
+ 	return NULL;
+ }
+ 
++/* Pixman-mode variant: return the union of KMS plane formats without
++ * intersecting with renderer formats (pixman has no GPU format list).
++ * Used as the get_scanout_formats_hook so that zwp_linux_dmabuf_v1 can
++ * advertise scanout-capable formats to clients like waylandsink. */
++static struct weston_drm_format_array *
++get_scanout_formats_pixman_hook(struct weston_compositor *ec)
++{
++	struct drm_backend *b = (struct drm_backend *)ec->backend;
++	struct weston_drm_format_array *scanout_formats;
++	struct drm_plane *plane;
++	int ret;
++
++	scanout_formats = zalloc(sizeof(*scanout_formats));
++	if (!scanout_formats) {
++		weston_log("%s: out of memory\n", __func__);
++		return NULL;
++	}
++	weston_drm_format_array_init(scanout_formats);
++
++	wl_list_for_each(plane, &b->plane_list, link) {
++		if (plane->type == WDRM_PLANE_TYPE_CURSOR)
++			continue;
++		ret = weston_drm_format_array_join(scanout_formats,
++						   &plane->formats);
++		if (ret < 0) {
++			weston_drm_format_array_fini(scanout_formats);
++			free(scanout_formats);
++			return NULL;
++		}
++	}
++	return scanout_formats;
++}
++
+ /** Pick a CRTC and reserve it for the output.
+  *
+  * On failure, the output remains without a CRTC.
+diff --git a/libweston/backend-drm/fb.c b/libweston/backend-drm/fb.c
+index ba0c177..449c2e0 100644
+--- a/libweston/backend-drm/fb.c
++++ b/libweston/backend-drm/fb.c
+@@ -243,12 +243,16 @@ drm_fb_get_from_dmabuf(struct linux_dmabuf_buffer *dmabuf,
+ 	 * instance, a tiling layout under the hood - and both Weston and the
+ 	 * KMS driver can't know. So giving the buffer to KMS is not safe, as
+ 	 * not knowing its layout can result in garbage being displayed. In
+-	 * short, importing a buffer to KMS requires explicit modifiers. */
++	 * short, importing a buffer to KMS requires explicit modifiers.
++	 *
++	 * Exception: DRM dumb BOs are always allocated as linear (the kernel
++	 * dumb-BO API guarantees it).  GStreamer's gst_dmabuf_allocator sends
++	 * DRM_FORMAT_MOD_INVALID for dumb BOs because GstDMABuf has no
++	 * modifier channel in GStreamer ≤ 1.22.  We promote INVALID → LINEAR
++	 * here so that waylandsink / other clients presenting dumb-BO DMABufs
++	 * without modifier metadata can still reach the hardware plane. */
+ 	if (dmabuf->attributes.modifier[0] == DRM_FORMAT_MOD_INVALID) {
+-		if (try_view_on_plane_failure_reasons)
+-			*try_view_on_plane_failure_reasons |=
+-				FAILURE_REASONS_DMABUF_MODIFIER_INVALID;
+-		return NULL;
++		import_mod.modifier = DRM_FORMAT_MOD_LINEAR;
+ 	}
+ 
+ 	/* XXX: TODO:
+diff --git a/libweston/linux-dmabuf.c b/libweston/linux-dmabuf.c
+index 1bcfd74..3dad951 100644
+--- a/libweston/linux-dmabuf.c
++++ b/libweston/linux-dmabuf.c
+@@ -1052,12 +1052,43 @@ bind_linux_dmabuf(struct wl_client *client,
+ 		return;
+ 
+ 	/* When the renderer has no get_supported_formats hook (e.g. pixman),
+-	 * we cannot enumerate GPU-side formats.  Skip format advertisement;
+-	 * the client learns which formats are usable by attempting params.create
+-	 * and observing success/failure.  The DRM backend still performs
+-	 * weston_compositor_dmabuf_can_scanout() validation at that point. */
+-	if (compositor->renderer->get_supported_formats == NULL)
++	 * try the backend's scanout-formats hook instead.  This lets clients
++	 * like waylandsink know which formats can be presented as dmabuf
++	 * directly via KMS plane promotion, even when there is no GL renderer
++	 * to enumerate GPU-side formats.  If neither hook is available, fall
++	 * through silently - the client learns by attempting params.create. */
++	if (compositor->renderer->get_supported_formats == NULL) {
++		if (compositor->get_scanout_formats_hook) {
++			struct weston_drm_format_array *scanout_formats =
++				compositor->get_scanout_formats_hook(compositor);
++			if (scanout_formats) {
++				struct weston_drm_format *fmt;
++				uint32_t num_modifiers, i;
++				const uint64_t *modifiers;
++
++				wl_array_for_each(fmt, &scanout_formats->arr) {
++					modifiers = weston_drm_format_get_modifiers(fmt, &num_modifiers);
++					for (i = 0; i < num_modifiers; i++) {
++						if (version >= ZWP_LINUX_DMABUF_V1_MODIFIER_SINCE_VERSION) {
++							uint32_t modifier_lo = modifiers[i] & 0xFFFFFFFF;
++							uint32_t modifier_hi = modifiers[i] >> 32;
++							zwp_linux_dmabuf_v1_send_modifier(resource,
++											  fmt->format,
++											  modifier_hi,
++											  modifier_lo);
++						} else if (modifiers[i] == DRM_FORMAT_MOD_LINEAR ||
++							   modifiers[i] == DRM_FORMAT_MOD_INVALID) {
++							zwp_linux_dmabuf_v1_send_format(resource,
++											fmt->format);
++						}
++					}
++				}
++				weston_drm_format_array_fini(scanout_formats);
++				free(scanout_formats);
++			}
++		}
+ 		return;
++	}
+ 
+ 	supported_formats = compositor->renderer->get_supported_formats(compositor);
+ 
+-- 
+2.43.0
+

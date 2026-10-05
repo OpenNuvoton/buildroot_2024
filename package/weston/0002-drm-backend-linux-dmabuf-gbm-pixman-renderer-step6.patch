@@ -1,0 +1,180 @@
+From 9e20146cc443db4ae199828d4cea94cac6ef283b Mon Sep 17 00:00:00 2001
+From: yclu4 <yclu4@nuvoton.com>
+Date: Tue, 15 Sep 2026 17:29:37 +0800
+Subject: [PATCH] drm-backend: advertise linux-dmabuf with pixman renderer
+ (direct-scanout path)
+
+With --use-pixman, renderer->import_dmabuf is NULL, so linux_dmabuf_setup()
+was never called and zwp_linux_dmabuf_v1 was never advertised to clients.
+
+Fix 1 (drm.c): call linux_dmabuf_setup() unconditionally at DRM backend init;
+  keep the renderer->import_dmabuf guard only for dmabuf_feedback/direct_display
+  which genuinely require GPU import.
+
+Fix 2 (linux-dmabuf.c): when params.create is called and the renderer has no
+  import_dmabuf hook, skip the GPU import step and fall through to
+  avoid_gpu_import.  The DRM backend promotes the buffer to a KMS plane via
+  drm_can_scanout_dmabuf / state-propose.c without renderer involvement.
+---
+ libweston/backend-drm/drm.c | 40 +++++++++++++++++++++++++++++++++----
+ libweston/linux-dmabuf.c    | 25 ++++++++++++++++++-----
+ libweston/pixman-renderer.c | 27 +++++++++++++++++++++----
+ 3 files changed, 79 insertions(+), 13 deletions(-)
+
+diff --git a/libweston/backend-drm/drm.c b/libweston/backend-drm/drm.c
+index 4278770..4eac092 100644
+--- a/libweston/backend-drm/drm.c
++++ b/libweston/backend-drm/drm.c
+@@ -36,6 +36,7 @@
+ #include <string.h>
+ #include <fcntl.h>
+ #include <unistd.h>
++#include <dlfcn.h>
+ #include <linux/input.h>
+ #include <linux/vt.h>
+ #include <assert.h>
+@@ -739,7 +740,31 @@ drm_output_switch_mode(struct weston_output *output_base, struct weston_mode *mo
+ static int
+ init_pixman(struct drm_backend *b)
+ {
+-	return pixman_renderer_init(b->compositor);
++	int ret = pixman_renderer_init(b->compositor);
++
++	if (ret < 0)
++		return ret;
++
++	/* Initialize GBM so that drm_fb_get_from_dmabuf() can import client
++	 * dmabufs for direct KMS scanout even when the pixman renderer is
++	 * in use.  GBM is needed for drm_fb_get_from_view()'s b->gbm check
++	 * (fb.c) and for drm_fb_get_from_dmabuf() which calls
++	 * gbm_bo_import().  We do NOT initialize EGL/GL - this is purely for
++	 * the kernel-import path. */
++#ifdef BUILD_DRM_GBM
++	/* Load gl-renderer.so first so libglapi symbols are globally
++	 * available (Mesa DRI driver requires them via libglapi). */
++	weston_load_module("gl-renderer.so", "gl_renderer_interface");
++	dlopen("libglapi.so.0", RTLD_LAZY | RTLD_GLOBAL);
++
++	b->gbm = gbm_create_device(b->drm.fd);
++	if (!b->gbm)
++		weston_log("DRM: GBM init failed; client dmabuf scanout disabled.\n");
++	else
++		weston_log("DRM: GBM initialized for dmabuf scanout (pixman renderer).\n");
++#endif
++
++	return 0;
+ }
+ 
+ /**
+@@ -3147,10 +3172,17 @@ drm_backend_create(struct weston_compositor *compositor,
+ 	weston_compositor_add_debug_binding(compositor, KEY_W,
+ 					    renderer_switch_binding, b);
+ 
++	/* Always advertise linux-dmabuf when the DRM backend is active.
++	 * The original guard (renderer->import_dmabuf) was intended for
++	 * GL-renderer buffer import, but the DRM backend can scanout client
++	 * dmabufs directly via KMS plane promotion regardless of whether the
++	 * renderer supports texturing from dmabufs.  With --use-pixman the
++	 * renderer hook is NULL, which previously suppressed the protocol
++	 * advertisement entirely and broke direct-scanout clients. */
++	if (linux_dmabuf_setup(compositor) < 0)
++		weston_log("Error: initializing dmabuf support failed.\n");
++
+ 	if (compositor->renderer->import_dmabuf) {
+-		if (linux_dmabuf_setup(compositor) < 0)
+-			weston_log("Error: initializing dmabuf "
+-				   "support failed.\n");
+ 		if (compositor->default_dmabuf_feedback) {
+ 			/* We were able to create the compositor's default
+ 			 * dma-buf feedback in the renderer, that means that the
+diff --git a/libweston/linux-dmabuf.c b/libweston/linux-dmabuf.c
+index 21de498..1bcfd74 100644
+--- a/libweston/linux-dmabuf.c
++++ b/libweston/linux-dmabuf.c
+@@ -271,8 +271,18 @@ params_create_common(struct wl_client *client,
+ 		goto avoid_gpu_import;
+ 	}
+ 
+-	if (!weston_compositor_import_dmabuf(buffer->compositor, buffer))
+-		goto err_failed;
++	/* When the renderer has no import_dmabuf hook (e.g. pixman renderer),
++	 * skip GPU import entirely.  The DRM backend can still scanout the
++	 * buffer directly via KMS plane promotion; weston_compositor_dmabuf_-
++	 * can_scanout() will be called later in state-propose.c when the view
++	 * is evaluated for plane assignment.  Falling through to avoid_gpu_-
++	 * import here allows the wl_buffer to be created so the client can
++	 * attach and commit it. */
++	if (!weston_compositor_import_dmabuf(buffer->compositor, buffer)) {
++		if (buffer->compositor->renderer->import_dmabuf != NULL)
++			goto err_failed;
++		/* renderer has no import hook - allow direct-scanout path */
++	}
+ 
+ avoid_gpu_import:
+ 	buffer->buffer_resource = wl_resource_create(client,
+@@ -1041,9 +1051,14 @@ bind_linux_dmabuf(struct wl_client *client,
+ 	if (version >= 4)
+ 		return;
+ 
+-	/* If we got here, it means that the renderer is able to import dma-buf
+-	 * buffers, and so it must have get_supported_formats() set. */
+-	assert(compositor->renderer->get_supported_formats != NULL);
++	/* When the renderer has no get_supported_formats hook (e.g. pixman),
++	 * we cannot enumerate GPU-side formats.  Skip format advertisement;
++	 * the client learns which formats are usable by attempting params.create
++	 * and observing success/failure.  The DRM backend still performs
++	 * weston_compositor_dmabuf_can_scanout() validation at that point. */
++	if (compositor->renderer->get_supported_formats == NULL)
++		return;
++
+ 	supported_formats = compositor->renderer->get_supported_formats(compositor);
+ 
+ 	wl_array_for_each(fmt, &supported_formats->arr) {
+diff --git a/libweston/pixman-renderer.c b/libweston/pixman-renderer.c
+index 754adce..292c7e5 100644
+--- a/libweston/pixman-renderer.c
++++ b/libweston/pixman-renderer.c
+@@ -33,6 +33,7 @@
+ #include <assert.h>
+ 
+ #include "pixman-renderer.h"
++#include "linux-dmabuf.h"
+ #include "color.h"
+ #include "pixel-formats.h"
+ #include "shared/helpers.h"
+@@ -645,10 +646,28 @@ pixman_renderer_attach(struct weston_surface *es, struct weston_buffer *buffer)
+ 
+ 	shm_buffer = wl_shm_buffer_get(buffer->resource);
+ 
+-	if (! shm_buffer) {
+-		weston_log("Pixman renderer supports only SHM buffers\n");
+-		weston_buffer_reference(&ps->buffer_ref, NULL);
+-		weston_buffer_release_reference(&ps->buffer_release_ref, NULL);
++	if (!shm_buffer) {
++		/* Non-SHM buffer (e.g. dmabuf).  The pixman renderer cannot
++		 * composite it, but the DRM backend's plane-promotion path
++		 * (state-propose.c) can scanout the buffer directly via KMS
++		 * without involving the renderer at all.  Keep the buffer
++		 * reference alive so that weston_view_has_valid_buffer() returns
++		 * true and plane-promotion is attempted.  Set ps->image = NULL
++		 * so the pixman repaint path simply skips this surface (it will
++		 * never fall back to software compositing for a dmabuf anyway).
++		 * Also populate buffer->width/height from the dmabuf attributes
++		 * so that surface size calculations work correctly. */
++		struct linux_dmabuf_buffer *dmabuf =
++			linux_dmabuf_buffer_get(buffer->resource);
++		if (dmabuf) {
++			buffer->width  = dmabuf->attributes.width;
++			buffer->height = dmabuf->attributes.height;
++		} else {
++			/* Unknown non-SHM type - reject as before */
++			weston_log("Pixman renderer supports only SHM buffers\n");
++			weston_buffer_reference(&ps->buffer_ref, NULL);
++			weston_buffer_release_reference(&ps->buffer_release_ref, NULL);
++		}
+ 		return;
+ 	}
+ 
+-- 
+2.43.0
+

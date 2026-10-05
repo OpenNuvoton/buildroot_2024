@@ -1,0 +1,95 @@
+From d97532f510ddcdfda774dd90730bd97155221f8b Mon Sep 17 00:00:00 2001
+From: yclu4 <yclu4@nuvoton.com>
+Date: Tue, 15 Sep 2026 17:29:37 +0800
+Subject: [PATCH] state-propose: fix PLANES_ONLY for no-buffer views and dual
+ fullscreen clients
+
+Two independent fixes enabling both video and Qt UI to reach hardware
+planes simultaneously under the pixman renderer with kiosk-shell.
+
+Fix 1 - skip no-buffer views instead of aborting PLANES_ONLY
+kiosk-shell creates a solid-colour background surface with no wl_buffer
+(weston_solid_color_surface).  In PLANES_ONLY mode renderer_ok=false,
+so the original force_renderer=true on a no-buffer view caused the
+entire state proposal to abort, falling through to MIXED and then
+RENDERER_ONLY.  A no-buffer view is invisible and contributes no pixels;
+skip it with continue so real client surfaces can still be promoted to
+hardware planes.
+
+Fix 2 - allow topmost fullscreen view to try overlay with multiple clients
+The guard (view_matches_entire_output && !scanout_has_view_assigned)
+refused overlay for any fullscreen view when primary had no view yet.
+This is correct for a single fullscreen client (it should go to primary,
+not overlay), but with two fullscreen clients it forced the topmost
+(foreground) view to primary, leaving the second client with no plane
+and aborting PLANES_ONLY.  Count views with valid buffers on this output:
+keep the guard for a single client, remove it when two or more clients
+are present so the topmost takes overlay and the second takes primary.
+
+---
+ libweston/backend-drm/state-propose.c | 41 +++++++++++++++++++++++++--
+ 1 file changed, 38 insertions(+), 3 deletions(-)
+
+diff --git a/libweston/backend-drm/state-propose.c b/libweston/backend-drm/state-propose.c
+index 7b350aa..4fae525 100644
+--- a/libweston/backend-drm/state-propose.c
++++ b/libweston/backend-drm/state-propose.c
+@@ -485,9 +485,33 @@ drm_output_try_view_on_plane(struct drm_plane *plane,
+ 			drm_output_check_plane_has_view_assigned(scanout_plane,
+ 								 state);
+ 
++		/* Original guard: refuse overlay for a fullscreen view when
++		 * primary has no view assigned yet, so a single fullscreen
++		 * client goes to primary (scanout) rather than overlay.
++		 *
++		 * With two fullscreen clients the topmost view must go to the
++		 * overlay plane so the bottom view can take primary.  Allow the
++		 * overlay attempt here; drm_output_prepare_overlay_view() will
++		 * fall through to primary via drm_output_try_view_on_plane() if
++		 * the overlay atomic-test fails.  We only keep the guard when
++		 * there is exactly one view in the paint-node list (single
++		 * client fast-path). */
+ 		if (view_matches_entire_output && !scanout_has_view_assigned) {
+-			availability = NO_PLANES_ACCEPTED;
+-			goto out;
++			/* Count how many client views are pending assignment */
++			int pending_views = 0;
++			struct weston_paint_node *pn;
++			wl_list_for_each(pn, &state->output->base.paint_node_z_order_list,
++					 z_order_link) {
++				if (weston_view_has_valid_buffer(pn->view) &&
++				    pn->view->output_mask == (1u << state->output->base.id))
++					pending_views++;
++			}
++			if (pending_views <= 1) {
++				availability = NO_PLANES_ACCEPTED;
++				goto out;
++			}
++			/* Two or more client views: let topmost try overlay so
++			 * the bottom view can claim primary. */
+ 		}
+ 
+ 		ps = drm_output_prepare_overlay_view(plane, state, ev, mode,
+@@ -960,7 +984,18 @@ drm_output_propose_state(struct weston_output *output_base,
+ 		if (!weston_view_has_valid_buffer(ev)) {
+ 			drm_debug(b, "\t\t\t\t[view] not assigning view %p to plane "
+ 			             "(no buffer available)\n", ev);
+-			force_renderer = true;
++			/* A view with no buffer (e.g. kiosk-shell solid-colour
++			 * background) cannot go on a plane AND has nothing to
++			 * render - it is entirely invisible.  In PLANES_ONLY mode
++			 * renderer_ok is false, so force_renderer=true would
++			 * immediately abort the whole state proposal and prevent
++			 * real client surfaces from being promoted to hardware
++			 * planes.  Instead, skip the view silently: it occupies
++			 * no pixels and does not need to block plane assignment
++			 * for other views. */
++			pixman_region32_fini(&surface_overlap);
++			pixman_region32_fini(&clipped_view);
++			continue;
+ 		}
+ 
+ 		if (pnode->surf_xform.transform != NULL ||
+-- 
+2.43.0
+
