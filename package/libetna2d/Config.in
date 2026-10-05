@@ -1,0 +1,12 @@
+config BR2_PACKAGE_LIBETNA2D
+	bool "libetna2d"
+	select BR2_PACKAGE_LIBDRM
+	select BR2_PACKAGE_LIBDRM_ETNAVIV
+	help
+	  Userspace HAL for the Vivante GC520 2D GPU (Nuvoton MA35D1):
+	  an opaque C API wrapping the GC520 Drawing Engine's
+	  bitblt / stretchblt / premultiplied-alpha-blend commands on
+	  top of libdrm_etnaviv, plus KMS scanout helpers.
+
+	  Used by the etnaviv2d Qt5 QPA plugin (qt5-etnaviv2d-qpa) and
+	  by the vendor 2D-acceleration test/benchmark tools.

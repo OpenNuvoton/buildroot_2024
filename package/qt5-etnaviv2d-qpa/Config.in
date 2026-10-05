@@ -1,0 +1,35 @@
+config BR2_PACKAGE_QT5_ETNAVIV2D_QPA
+	bool "qt5-etnaviv2d-qpa"
+	depends on BR2_PACKAGE_QT5
+	select BR2_PACKAGE_QT5BASE_GUI
+	select BR2_PACKAGE_QT5BASE_WIDGETS
+	select BR2_PACKAGE_LIBETNA2D
+	select BR2_PACKAGE_LIBDRM
+	select BR2_PACKAGE_LIBDRM_ETNAVIV
+	select BR2_PACKAGE_WAYLAND
+	select BR2_PACKAGE_WAYLAND_PROTOCOLS
+	# Weston's drm-backend only imports client dmabufs for direct KMS
+	# scanout under its pixman renderer (BUILD_DRM_GBM) if gbm.pc is
+	# present at Weston's build time. This plugin's plane=wayland
+	# transport is what actually exercises that path (linux-dmabuf-v1
+	# submission to Weston as a Wayland client), so pull mesa3d in as a
+	# GBM/EGL provider here -- swrast only, no GL rendering ever happens
+	# through it; the real GC520 GPU stays on libetna2d/libdrm_etnaviv.
+	select BR2_PACKAGE_MESA3D
+	select BR2_PACKAGE_MESA3D_GALLIUM_DRIVER_SWRAST
+	select BR2_PACKAGE_MESA3D_OPENGL_EGL
+	select BR2_PACKAGE_MESA3D_OPENGL_ES
+	help
+	  Qt5 QPA (platform abstraction) plugin accelerating QPainter
+	  fill/blit/blend/stretch through the GC520 2D DE via
+	  libetna2d, for direct KMS as well as running as a Wayland
+	  client (linux-dmabuf-v1, xdg_toplevel / ivi_surface,
+	  wl_seat input, hardware cursor) under Weston.
+
+	  Installs as /usr/lib/qt/plugins/platforms/libqetnaviv2d.so;
+	  select at runtime with QT_QPA_PLATFORM=etnaviv2d[:plane=...].
+
+	  Also pulls in mesa3d (swrast Gallium driver, EGL/GBM only --
+	  no GL rendering happens through it) so that Weston's drm-backend
+	  builds with dmabuf-import support (BUILD_DRM_GBM) for its pixman
+	  renderer; without it, client surfaces silently fail to display.

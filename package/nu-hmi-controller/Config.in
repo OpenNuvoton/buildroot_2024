@@ -1,0 +1,12 @@
+config BR2_PACKAGE_NU_HMI_CONTROLLER
+	bool "nu-hmi-controller"
+	depends on BR2_PACKAGE_WESTON
+	depends on BR2_PACKAGE_WESTON_SHELL_IVI
+	help
+	  ivi-shell HMI controller plugin for Weston: assigns
+	  launch-order-independent layer IDs and z-order to ivi-shell
+	  client surfaces at runtime (instead of ivi-shell's default
+	  launch-order stacking).
+
+	  Loaded by Weston via weston.ini's [core] modules= line;
+	  configured via [nuvoton-layer] sections in weston.ini.
