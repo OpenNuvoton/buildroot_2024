@@ -198,8 +198,10 @@ endif
 define WESTON_TARGET_INSTALL_CMD
 	$(INSTALL) -m 0755 -D $(WESTON_PKGDIR)/weston.sh \
                 $(TARGET_DIR)/etc/profile.d/weston.sh
-	$(INSTALL) -m 0755 -D $(WESTON_PKGDIR)/weston.ini \
+	$(INSTALL) -m 0644 -D $(WESTON_PKGDIR)/weston.ini \
                 $(TARGET_DIR)/etc/xdg/weston/weston.ini
+	$(INSTALL) -m 0644 -D $(WESTON_PKGDIR)/weston-ivi.ini \
+                $(TARGET_DIR)/etc/xdg/weston/weston-ivi.ini
 endef
 
 WESTON_POST_INSTALL_TARGET_HOOKS += WESTON_TARGET_INSTALL_CMD
