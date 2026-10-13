@@ -117,6 +117,7 @@ endchoice
 
 choice
 	prompt "MA35 Version"
+	default BR2_LINUX_KERNEL_MA35_6_18_VERSION
 	depends on BR2_LINUX_KERNEL_MA35
 
 config BR2_LINUX_KERNEL_MA35_5_10_VERSION
