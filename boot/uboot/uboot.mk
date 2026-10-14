@@ -287,6 +287,26 @@ define UBOOT_DROP_YYLLOC
 endef
 UBOOT_POST_PATCH_HOOKS += UBOOT_DROP_YYLLOC
 
+define MA35_UBOOT_SET_MTDPARTS
+	if [ "$(BR2_ANTI_ROLLBACK_AB_BOOT)" = "y" ]; then \
+		cfg_file="$(@D)/.config"; \
+		mtdparts_body='$(call qstrip,$(BR2_TARGET_MA35_UBOOT_MTDPARTS_AB))'; \
+		echo ">>> Override CONFIG_MTDPARTS_DEFAULT in $$cfg_file"; \
+		echo ">>> New body: $$mtdparts_body"; \
+		if [ ! -f "$$cfg_file" ]; then \
+			echo ">>> skip: U-Boot .config not found: $$cfg_file"; \
+		elif grep -q '^CONFIG_MTDPARTS_DEFAULT="mtdparts=[^:]*:' "$$cfg_file"; then \
+			sed -i "s|^\(CONFIG_MTDPARTS_DEFAULT=\"mtdparts=[^:]*:\).*\"|\1$$mtdparts_body\"|" "$$cfg_file"; \
+			echo ">>> after replace"; \
+			grep -n '^CONFIG_MTDPARTS_DEFAULT=' "$$cfg_file" || true; \
+		else \
+			echo ">>> skip: CONFIG_MTDPARTS_DEFAULT not found in $$cfg_file"; \
+		fi; \
+	fi
+endef
+
+UBOOT_PRE_BUILD_HOOKS += MA35_UBOOT_SET_MTDPARTS
+
 ifneq ($(ARCH_XTENSA_OVERLAY_FILE),)
 define UBOOT_XTENSA_OVERLAY_EXTRACT
 	$(call arch-xtensa-overlay-extract,$(@D),u-boot)
