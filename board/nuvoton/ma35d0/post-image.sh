@@ -25,6 +25,42 @@ UBOOT_DTB_NAME=
 ECDSA_KEY=
 AES_KEY=
 
+make_signed_fit() {
+	local bindir="${BINARIES_DIR}"
+	local keydir="${bindir}/keys"
+	local key="${keydir}/dev.key"
+	local crt="${keydir}/dev.crt"
+	local linux_ver
+
+	mkdir -p "${keydir}" || return 1
+
+	if [ ! -f "${key}" ] || [ ! -f "${crt}" ]; then
+		echo "make_signed_fit: generate RSA key and certificate"
+		rm -f "${key}" "${crt}"
+
+		"${HOST_DIR}/bin/openssl" genpkey -algorithm RSA \
+			-out "${key}" \
+			-pkeyopt rsa_keygen_bits:2048 || return 1
+
+		"${HOST_DIR}/bin/openssl" req -batch -new -x509 \
+			-key "${key}" \
+			-out "${crt}" || return 1
+	else
+		echo "make_signed_fit: reuse existing key/cert"
+	fi
+
+	linux_ver=$(sed -n 's/^BR2_MA35_ARB_LINUX_VER=//p' "${BR2_CONFIG}" | head -n1 | tr -d '[:space:]')
+	[ -n "${linux_ver}" ] || linux_ver=1
+
+	(
+		cd "${bindir}" || exit 1
+		sed "s|LINUX_VERSION|<${linux_ver}>|g" "${PROJECT_DIR}/rollback/Image.its" > Image.its || exit 1
+		cp -f u-boot.dtb u-boot-fit.dtb
+		rm -f Image.fit u-boot.bin
+		"${HOST_DIR}/bin/mkimage" -f Image.its -K u-boot-fit.dtb -k keys/ -r Image.fit || exit 1
+		cat u-boot-nodtb.bin u-boot-fit.dtb > u-boot.bin || exit 1
+	)
+}
 #
 # dtb_list extracts the list of DTB files from BR2_LINUX_KERNEL_INTREE_DTS_NAME
 # in ${BR_CONFIG}, then prints the corresponding list of file names for the
@@ -87,14 +123,33 @@ IMAGE_CMD_spinand() {
 			ln -sf header-${IMAGE_BASENAME}-${MACHINE}-enc-spinand.bin header.bin;
 			cp conv/enc_bl2.dtb ${NUWRITER_TARGET}/enc_bl2.dtb; \
 			cp conv/enc_bl2.bin ${NUWRITER_TARGET}/enc_bl2.bin; \
+			if grep -Eq "^BR2_ANTI_ROLLBACK_AB_BOOT=y$" ${BR2_CONFIG}; then \
+				rm -rf conv; \
+				$(cat ${NUWRITER_DIR}/header-spinand-1.json | ${HOST_DIR}/bin/jq -r ".header.secureboot = \"yes\"" | \
+				${HOST_DIR}/bin/jq -r ".header.aeskey = \"${AES_KEY}\"" | \
+				${HOST_DIR}/bin/jq -r ".header.ecdsakey = \"${ECDSA_KEY}\"" \
+				> ${NUWRITER_TARGET}/header-spinand-1.json); \
+				${HOST_DIR}/bin/nuwriter.py -c ${NUWRITER_TARGET}/header-spinand-1.json; \
+				cp conv/header.bin header-${IMAGE_BASENAME}-${MACHINE}-enc-spinand-1.bin; \
+				ln -sf header-${IMAGE_BASENAME}-${MACHINE}-enc-spinand-1.bin header-1.bin;
+			fi; \
 			echo "{\""publicx"\": \""$(head -6 conv/header_key.txt | tail +6)"\", \
 			\""publicy"\": \""$(head -7 conv/header_key.txt | tail +7)"\", \
 			\""aeskey"\": \""$(head -2 conv/header_key.txt | tail +2)"\"}" | \
 			${HOST_DIR}/bin/jq  > ${NUWRITER_TARGET}/otp_key.json; \
-			$(cat ${NUWRITER_DIR}/pack-spinand.json | \
-			${HOST_DIR}/bin/jq 'setpath(["image",1,"file"];"nuwriter/enc_bl2.dtb")' | \
-			${HOST_DIR}/bin/jq 'setpath(["image",2,"file"];"nuwriter/enc_bl2.bin")' \
-			> ${NUWRITER_TARGET}/pack-spinand.json); \
+			if grep -Eq "^BR2_ANTI_ROLLBACK_AB_BOOT=y$" ${BR2_CONFIG}; then \
+				$(cat ${NUWRITER_DIR}/pack-spinand.json | \
+				${HOST_DIR}/bin/jq 'setpath(["image",1,"file"];"nuwriter/enc_bl2.dtb")' | \
+				${HOST_DIR}/bin/jq 'setpath(["image",2,"file"];"nuwriter/enc_bl2.bin")' | \
+				${HOST_DIR}/bin/jq 'setpath(["image",7,"file"];"nuwriter/enc_bl2.dtb")' | \
+				${HOST_DIR}/bin/jq 'setpath(["image",8,"file"];"nuwriter/enc_bl2.bin")' \
+				> ${NUWRITER_TARGET}/pack-spinand.json); \
+			else \
+				$(cat ${NUWRITER_DIR}/pack-spinand.json | \
+				${HOST_DIR}/bin/jq 'setpath(["image",1,"file"];"nuwriter/enc_bl2.dtb")' | \
+				${HOST_DIR}/bin/jq 'setpath(["image",2,"file"];"nuwriter/enc_bl2.bin")' \
+				> ${NUWRITER_TARGET}/pack-spinand.json); \
+			fi; \
 			${HOST_DIR}/bin/nuwriter.py -p ${NUWRITER_TARGET}/pack-spinand.json; \
 			cp pack/pack.bin pack-${IMAGE_BASENAME}-${MACHINE}-enc-spinand.bin; \
 			rm -rf $(date "+%m%d-*") conv pack; \
@@ -104,11 +159,18 @@ IMAGE_CMD_spinand() {
 			cd ${BINARIES_DIR}; \
 			cp ${MACHINE}.dtb Image.dtb; \
 			cp fip.bin fip.bin-spinand; \
-			cp ${NUWRITER_DIR}/header-spinand.json ${NUWRITER_TARGET}/header-spinand.json
+			cp ${NUWRITER_DIR}/header-spinand.json ${NUWRITER_TARGET}/header-spinand.json; \
 			${HOST_DIR}/bin/nuwriter.py -c ${NUWRITER_DIR}/header-spinand.json; \
 			cp conv/header.bin header-${IMAGE_BASENAME}-${MACHINE}-spinand.bin; \
 			ln -sf header-${IMAGE_BASENAME}-${MACHINE}-spinand.bin header.bin;
-			cp ${NUWRITER_DIR}/pack-spinand.json ${NUWRITER_TARGET}/pack-spinand.json;
+			if grep -Eq "^BR2_ANTI_ROLLBACK_AB_BOOT=y$" ${BR2_CONFIG}; then \
+				rm -rf conv; \
+				cp ${NUWRITER_DIR}/header-spinand-1.json ${NUWRITER_TARGET}/header-spinand-1.json; \
+				${HOST_DIR}/bin/nuwriter.py -c ${NUWRITER_DIR}/header-spinand-1.json; \
+				cp conv/header.bin header-${IMAGE_BASENAME}-${MACHINE}-spinand-1.bin; \
+				ln -sf header-${IMAGE_BASENAME}-${MACHINE}-spinand-1.bin header-1.bin; \
+			fi; \
+			cp ${NUWRITER_DIR}/pack-spinand.json ${NUWRITER_TARGET}/pack-spinand.json; \
 			${HOST_DIR}/bin/nuwriter.py -p ${NUWRITER_TARGET}/pack-spinand.json; \
 			cp pack/pack.bin pack-${IMAGE_BASENAME}-${MACHINE}-spinand.bin; \
 			rm -rf $(date "+%m%d-*") conv pack; \
@@ -139,14 +201,33 @@ IMAGE_CMD_spinor() {
 		ln -sf header-${IMAGE_BASENAME}-${MACHINE}-enc-spinor.bin header.bin;
 		cp conv/enc_bl2.dtb ${NUWRITER_TARGET}/enc_bl2.dtb; \
 		cp conv/enc_bl2.bin ${NUWRITER_TARGET}/enc_bl2.bin; \
+		if grep -Eq "^BR2_ANTI_ROLLBACK_AB_BOOT=y$" ${BR2_CONFIG}; then \
+			rm -rf conv; \
+			$(cat ${NUWRITER_DIR}/header-spinor-1.json | ${HOST_DIR}/bin/jq -r ".header.secureboot = \"yes\"" | \
+			${HOST_DIR}/bin/jq -r ".header.aeskey = \"${AES_KEY}\"" | \
+			${HOST_DIR}/bin/jq -r ".header.ecdsakey = \"${ECDSA_KEY}\"" \
+			> ${NUWRITER_TARGET}/header-spinor-1.json); \
+			${HOST_DIR}/bin/nuwriter.py -c ${NUWRITER_TARGET}/header-spinor-1.json; \
+			cp conv/header.bin header-${IMAGE_BASENAME}-${MACHINE}-enc-spinor-1.bin; \
+			ln -sf header-${IMAGE_BASENAME}-${MACHINE}-enc-spinor-1.bin header-1.bin;
+		fi;
 		echo "{\""publicx"\": \""$(head -6 conv/header_key.txt | tail +6)"\", \
 		\""publicy"\": \""$(head -7 conv/header_key.txt | tail +7)"\", \
 		\""aeskey"\": \""$(head -2 conv/header_key.txt | tail +2)"\"}" | \
 		${HOST_DIR}/bin/jq  > ${NUWRITER_TARGET}/otp_key.json; \
-		$(cat ${NUWRITER_DIR}/pack-spinor.json | \
-		${HOST_DIR}/bin/jq 'setpath(["image",1,"file"];"nuwriter/enc_bl2.dtb")' | \
-		${HOST_DIR}/bin/jq 'setpath(["image",2,"file"];"nuwriter/enc_bl2.bin")' \
-		> ${NUWRITER_TARGET}/pack-spinor.json); \
+		if grep -Eq "^BR2_ANTI_ROLLBACK_AB_BOOT=y$" ${BR2_CONFIG}; then \
+			$(cat ${NUWRITER_DIR}/pack-spinor.json | \
+			${HOST_DIR}/bin/jq 'setpath(["image",1,"file"];"nuwriter/enc_bl2.dtb")' | \
+			${HOST_DIR}/bin/jq 'setpath(["image",2,"file"];"nuwriter/enc_bl2.bin")' | \
+			${HOST_DIR}/bin/jq 'setpath(["image",7,"file"];"nuwriter/enc_bl2.dtb")' | \
+			${HOST_DIR}/bin/jq 'setpath(["image",8,"file"];"nuwriter/enc_bl2.bin")' \
+			> ${NUWRITER_TARGET}/pack-spinor.json); \
+		else \
+			$(cat ${NUWRITER_DIR}/pack-spinor.json | \
+			${HOST_DIR}/bin/jq 'setpath(["image",1,"file"];"nuwriter/enc_bl2.dtb")' | \
+			${HOST_DIR}/bin/jq 'setpath(["image",2,"file"];"nuwriter/enc_bl2.bin")' \
+			> ${NUWRITER_TARGET}/pack-spinor.json); \
+		fi; \
 		${HOST_DIR}/bin/nuwriter.py -p ${NUWRITER_TARGET}/pack-spinor.json; \
 		cp pack/pack.bin pack-${IMAGE_BASENAME}-${MACHINE}-enc-spinor.bin; \
 		rm -rf $(date "+%m%d-*") conv pack; \
@@ -160,6 +241,13 @@ IMAGE_CMD_spinor() {
 		${HOST_DIR}/bin/nuwriter.py -c ${NUWRITER_DIR}/header-spinor.json; \
 		cp conv/header.bin header-${IMAGE_BASENAME}-${MACHINE}-spinor.bin; \
 		ln -sf header-${IMAGE_BASENAME}-${MACHINE}-spinor.bin header.bin;
+		if grep -Eq "^BR2_ANTI_ROLLBACK_AB_BOOT=y$" ${BR2_CONFIG}; then \
+			rm -rf conv; \
+			cp ${NUWRITER_DIR}/header-spinor-1.json ${NUWRITER_TARGET}/header-spinor-1.json \
+			${HOST_DIR}/bin/nuwriter.py -c ${NUWRITER_DIR}/header-spinor-1.json; \
+			cp conv/header.bin header-${IMAGE_BASENAME}-${MACHINE}-spinor-1.bin; \
+			ln -sf header-${IMAGE_BASENAME}-${MACHINE}-spinor-1.bin header-1.bin; \
+		fi; \
 		${HOST_DIR}/bin/nuwriter.py -p ${NUWRITER_DIR}/pack-spinor.json; \
 		cp ${NUWRITER_DIR}/pack-spinor.json ${NUWRITER_TARGET}/pack-spinor.json;
 		cp pack/pack.bin pack-${IMAGE_BASENAME}-${MACHINE}-spinor.bin; \
@@ -193,14 +281,33 @@ IMAGE_CMD_nand() {
 			ln -sf header-${IMAGE_BASENAME}-${MACHINE}-enc-nand.bin header.bin;
 			cp conv/enc_bl2.dtb ${NUWRITER_TARGET}/enc_bl2.dtb; \
 			cp conv/enc_bl2.bin ${NUWRITER_TARGET}/enc_bl2.bin; \
+			if grep -Eq "^BR2_ANTI_ROLLBACK_AB_BOOT=y$" ${BR2_CONFIG}; then \
+				rm -rf conv; \
+				$(cat ${NUWRITER_DIR}/header-nand-1.json | ${HOST_DIR}/bin/jq -r ".header.secureboot = \"yes\"" | \
+				${HOST_DIR}/bin/jq -r ".header.aeskey = \"${AES_KEY}\"" | \
+				${HOST_DIR}/bin/jq -r ".header.ecdsakey = \"${ECDSA_KEY}\"" \
+				> ${NUWRITER_TARGET}/header-nand-1.json); \
+				${HOST_DIR}/bin/nuwriter.py -c ${NUWRITER_TARGET}/header-nand-1.json; \
+				cp conv/header.bin header-${IMAGE_BASENAME}-${MACHINE}-enc-nand-1.bin; \
+				ln -sf header-${IMAGE_BASENAME}-${MACHINE}-enc-nand-1.bin header-1.bin; \
+			fi; \
 			echo "{\""publicx"\": \""$(head -6 conv/header_key.txt | tail +6)"\", \
 			\""publicy"\": \""$(head -7 conv/header_key.txt | tail +7)"\", \
 			\""aeskey"\": \""$(head -2 conv/header_key.txt | tail +2)"\"}" | \
 			${HOST_DIR}/bin/jq  > ${NUWRITER_TARGET}/otp_key.json; \
-			$(cat ${NUWRITER_DIR}/pack-nand.json | \
-			${HOST_DIR}/bin/jq 'setpath(["image",1,"file"];"nuwriter/enc_bl2.dtb")' | \
-			${HOST_DIR}/bin/jq 'setpath(["image",2,"file"];"nuwriter/enc_bl2.bin")' \
-			> ${NUWRITER_TARGET}/pack-nand.json); \
+			if grep -Eq "^BR2_ANTI_ROLLBACK_AB_BOOT=y$" ${BR2_CONFIG}; then \
+				$(cat ${NUWRITER_DIR}/pack-nand.json | \
+				${HOST_DIR}/bin/jq 'setpath(["image",1,"file"];"nuwriter/enc_bl2.dtb")' | \
+				${HOST_DIR}/bin/jq 'setpath(["image",2,"file"];"nuwriter/enc_bl2.bin")' | \
+				${HOST_DIR}/bin/jq 'setpath(["image",7,"file"];"nuwriter/enc_bl2.dtb")' | \
+				${HOST_DIR}/bin/jq 'setpath(["image",8,"file"];"nuwriter/enc_bl2.bin")' \
+				> ${NUWRITER_TARGET}/pack-nand.json); \
+			else \
+				$(cat ${NUWRITER_DIR}/pack-nand.json | \
+				${HOST_DIR}/bin/jq 'setpath(["image",1,"file"];"nuwriter/enc_bl2.dtb")' | \
+				${HOST_DIR}/bin/jq 'setpath(["image",2,"file"];"nuwriter/enc_bl2.bin")' \
+				> ${NUWRITER_TARGET}/pack-nand.json); \
+			fi; \
 			${HOST_DIR}/bin/nuwriter.py -p ${NUWRITER_TARGET}/pack-nand.json; \
 			cp pack/pack.bin pack-${IMAGE_BASENAME}-${MACHINE}-enc-nand.bin; \
 			rm -rf $(date "+%m%d-*") conv pack; \
@@ -210,12 +317,19 @@ IMAGE_CMD_nand() {
 			cd ${BINARIES_DIR}; \
 			cp ${MACHINE}.dtb Image.dtb; \
 			cp fip.bin fip.bin-nand; \
-			cp ${NUWRITER_DIR}/header-nand.json ${NUWRITER_TARGET}/header-nand.json
+			cp ${NUWRITER_DIR}/header-nand.json ${NUWRITER_TARGET}/header-nand.json; \
 			${HOST_DIR}/bin/nuwriter.py -c ${NUWRITER_DIR}/header-nand.json; \
 			cp conv/header.bin header-${IMAGE_BASENAME}-${MACHINE}-nand.bin; \
-			ln -sf header-${IMAGE_BASENAME}-${MACHINE}-nand.bin header.bin;
+			ln -sf header-${IMAGE_BASENAME}-${MACHINE}-nand.bin header.bin; \
+			if grep -Eq "^BR2_ANTI_ROLLBACK_AB_BOOT=y$" ${BR2_CONFIG}; then \
+				rm -rf conv; \
+				cp ${NUWRITER_DIR}/header-nand-1.json ${NUWRITER_TARGET}/header-nand-1.json; \
+				${HOST_DIR}/bin/nuwriter.py -c ${NUWRITER_DIR}/header-nand-1.json; \
+				cp conv/header.bin header-${IMAGE_BASENAME}-${MACHINE}-nand-1.bin; \
+				ln -sf header-${IMAGE_BASENAME}-${MACHINE}-nand-1.bin header-1.bin; \
+			fi;
 			${HOST_DIR}/bin/nuwriter.py -p ${NUWRITER_DIR}/pack-nand.json; \
-			cp ${NUWRITER_DIR}/pack-nand.json ${NUWRITER_TARGET}/pack-nand.json;
+			cp ${NUWRITER_DIR}/pack-nand.json ${NUWRITER_TARGET}/pack-nand.json; \
 			cp pack/pack.bin pack-${IMAGE_BASENAME}-${MACHINE}-nand.bin; \
 			rm -rf $(date "+%m%d-*") conv pack; \
 		)
@@ -234,9 +348,9 @@ IMAGE_CMD_sdcard()
 	if grep -Eq "^BR2_TARGET_MA35D0_SECURE_BOOT=y$" ${BR2_CONFIG}; then
 		SDCARD=${BINARIES_DIR}/${IMGDEPLOYDIR}/${IMAGE_BASENAME}-${MACHINE}-enc.rootfs.sdcard
 	fi
-	
-        # Initialize a sparse file
-        dd if=/dev/zero of=${SDCARD} bs=1 count=0 seek=$((1024*$SDCARD_SIZE)) &>${NULLDEV}
+
+	# Initialize a sparse file
+	dd if=/dev/zero of=${SDCARD} bs=1 count=0 seek=$((1024*$SDCARD_SIZE)) &>${NULLDEV}
 	${HOST_DIR}/bin/fakeroot -u ${HOST_DIR}/sbin/parted ${SDCARD} -s mklabel msdos
 	${HOST_DIR}/bin/fakeroot -u ${HOST_DIR}/sbin/parted ${SDCARD} -s unit KiB mkpart primary \
 		$(($BOOT_SPACE_ALIGNED)) \
@@ -262,15 +376,33 @@ IMAGE_CMD_sdcard()
 		ln -sf header-${IMAGE_BASENAME}-${MACHINE}-enc-sdcard.bin header.bin;
 		cp conv/enc_bl2.dtb ${NUWRITER_TARGET}/enc_bl2.dtb; \
 		cp conv/enc_bl2.bin ${NUWRITER_TARGET}/enc_bl2.bin; \
+		if grep -Eq "^BR2_ANTI_ROLLBACK_AB_BOOT=y$" ${BR2_CONFIG}; then \
+			$(cat ${NUWRITER_DIR}/header-sdcard-1.json | ${HOST_DIR}/bin/jq -r ".header.secureboot = \"yes\"" | \
+			${HOST_DIR}/bin/jq -r ".header.aeskey = \"${AES_KEY}\"" | ${HOST_DIR}/bin/jq -r ".header.ecdsakey = \"${ECDSA_KEY}\"" \
+			> ${NUWRITER_TARGET}/header-sdcard-1.json); \
+			${HOST_DIR}/bin/nuwriter.py -c ${NUWRITER_TARGET}/header-sdcard-1.json; \
+			cp conv/header.bin header-${IMAGE_BASENAME}-${MACHINE}-enc-sdcard-1.bin; \
+			ln -sf header-${IMAGE_BASENAME}-${MACHINE}-enc-sdcard-1.bin header-1.bin;
+		fi; \
 		echo "{\""publicx"\": \""$(head -6 conv/header_key.txt | tail +6)"\", \
 		\""publicy"\": \""$(head -7 conv/header_key.txt | tail +7)"\", \
 		\""aeskey"\": \""$(head -2 conv/header_key.txt | tail +2)"\"}" | \
 		${HOST_DIR}/bin/jq  > ${NUWRITER_TARGET}/otp_key.json; \
-		$(cat ${NUWRITER_DIR}/pack-sdcard.json | \
-		${HOST_DIR}/bin/jq 'setpath(["image",2,"file"];"nuwriter/enc_bl2.dtb")' | \
-		${HOST_DIR}/bin/jq 'setpath(["image",3,"file"];"nuwriter/enc_bl2.bin")' | \
-		${HOST_DIR}/bin/jq 'setpath(["image",8,"offset"];"'$(( ${BOOT_SPACE_ALIGNED}*1024+$IMAGE_ROOTFS_ALIGNMENT*1024))'")' \
-		> ${NUWRITER_TARGET}/pack-sdcard.json); \
+		if grep -Eq "^BR2_ANTI_ROLLBACK_AB_BOOT=y$" ${BR2_CONFIG}; then \
+			$(cat ${NUWRITER_DIR}/pack-sdcard.json | \
+			${HOST_DIR}/bin/jq 'setpath(["image",2,"file"];"nuwriter/enc_bl2.dtb")' | \
+			${HOST_DIR}/bin/jq 'setpath(["image",3,"file"];"nuwriter/enc_bl2.bin")' | \
+			${HOST_DIR}/bin/jq 'setpath(["image",8,"file"];"nuwriter/enc_bl2.dtb")' | \
+			${HOST_DIR}/bin/jq 'setpath(["image",9,"file"];"nuwriter/enc_bl2.bin")' | \
+			${HOST_DIR}/bin/jq 'setpath(["image",13,"offset"];"'$(( ${BOOT_SPACE_ALIGNED}*1024+$IMAGE_ROOTFS_ALIGNMENT*1024))'")' \
+			> ${NUWRITER_TARGET}/pack-sdcard.json); \
+		else \
+			$(cat ${NUWRITER_DIR}/pack-sdcard.json | \
+			${HOST_DIR}/bin/jq 'setpath(["image",2,"file"];"nuwriter/enc_bl2.dtb")' | \
+			${HOST_DIR}/bin/jq 'setpath(["image",3,"file"];"nuwriter/enc_bl2.bin")' | \
+			${HOST_DIR}/bin/jq 'setpath(["image",8,"offset"];"'$(( ${BOOT_SPACE_ALIGNED}*1024+$IMAGE_ROOTFS_ALIGNMENT*1024))'")' \
+			> ${NUWRITER_TARGET}/pack-sdcard.json); \
+		fi; \
 		${HOST_DIR}/bin/nuwriter.py -p ${NUWRITER_TARGET}/pack-sdcard.json; \
 		cp pack/pack.bin pack-${IMAGE_BASENAME}-${MACHINE}-enc-sdcard.bin; \
 		rm -rf $(date "+%m%d-*") conv pack; \
@@ -287,7 +419,15 @@ IMAGE_CMD_sdcard()
 		${HOST_DIR}/bin/nuwriter.py -c ${NUWRITER_TARGET}/header-sdcard.json; \
 		cp conv/header.bin header-${IMAGE_BASENAME}-${MACHINE}-sdcard.bin; \
 		ln -sf header-${IMAGE_BASENAME}-${MACHINE}-sdcard.bin header.bin;
-		$(cat ${NUWRITER_DIR}/pack-sdcard.json | ${HOST_DIR}/bin/jq 'setpath(["image",8,"offset"];"'$(( ${BOOT_SPACE_ALIGNED}*1024))'")' > ${NUWRITER_TARGET}/pack-sdcard.json); \
+		if grep -Eq "^BR2_ANTI_ROLLBACK_AB_BOOT=y$" ${BR2_CONFIG}; then \
+			cp ${NUWRITER_DIR}/header-sdcard-1.json ${NUWRITER_TARGET}
+			${HOST_DIR}/bin/nuwriter.py -c ${NUWRITER_TARGET}/header-sdcard-1.json; \
+			cp conv/header.bin header-${IMAGE_BASENAME}-${MACHINE}-sdcard-1.bin; \
+			ln -sf header-${IMAGE_BASENAME}-${MACHINE}-sdcard-1.bin header-1.bin; \
+			$(cat ${NUWRITER_DIR}/pack-sdcard.json | ${HOST_DIR}/bin/jq 'setpath(["image",13,"offset"];"'$(( ${BOOT_SPACE_ALIGNED}*1024))'")' > ${NUWRITER_TARGET}/pack-sdcard.json); \
+		else \
+			$(cat ${NUWRITER_DIR}/pack-sdcard.json | ${HOST_DIR}/bin/jq 'setpath(["image",8,"offset"];"'$(( ${BOOT_SPACE_ALIGNED}*1024))'")' > ${NUWRITER_TARGET}/pack-sdcard.json); \
+		fi; \
 		${HOST_DIR}/bin/nuwriter.py -p ${NUWRITER_TARGET}/pack-sdcard.json; \
 		cp pack/pack.bin pack-${IMAGE_BASENAME}-${MACHINE}-sdcard.bin; \
 		rm -rf $(date "+%m%d-*") conv pack; \
@@ -301,6 +441,15 @@ IMAGE_CMD_sdcard()
 		dd if=${NUWRITER_TARGET}/enc_bl2.dtb of=${SDCARD} conv=notrunc seek=256 bs=512 &>${NULLDEV}
 		# 0x30000
 		dd if=${NUWRITER_TARGET}/enc_bl2.bin of=${SDCARD} conv=notrunc seek=384 bs=512 &>${NULLDEV}
+
+		if grep -Eq "^BR2_ANTI_ROLLBACK_AB_BOOT=y$" ${BR2_CONFIG}; then
+			# 0x2400400
+			dd if=${BINARIES_DIR}/header-${IMAGE_BASENAME}-${MACHINE}-enc-sdcard.bin of=${SDCARD} conv=notrunc seek=3 bs=512 &>${NULLDEV}
+			# 0x2420000
+			dd if=${NUWRITER_TARGET}/enc_bl2.dtb of=${SDCARD} conv=notrunc seek=73984 bs=512 &>${NULLDEV}
+			# 0x2430000
+			dd if=${NUWRITER_TARGET}/enc_bl2.bin of=${SDCARD} conv=notrunc seek=74112 bs=512 &>${NULLDEV}
+		fi
 	else
 		# 0x400
 		dd if=${BINARIES_DIR}/header-${IMAGE_BASENAME}-${MACHINE}-sdcard.bin of=${SDCARD} conv=notrunc seek=2 bs=512 &>${NULLDEV}
@@ -308,22 +457,51 @@ IMAGE_CMD_sdcard()
 		dd if=${BINARIES_DIR}/bl2.dtb of=${SDCARD} conv=notrunc seek=256 bs=512 &>${NULLDEV}
 		# 0x30000
 		dd if=${BINARIES_DIR}/bl2.bin of=${SDCARD} conv=notrunc seek=384 bs=512 &>${NULLDEV}
+
+		if grep -Eq "^BR2_ANTI_ROLLBACK_AB_BOOT=y$" ${BR2_CONFIG}; then
+			# 0x2400400
+			dd if=${BINARIES_DIR}/header-${IMAGE_BASENAME}-${MACHINE}-sdcard.bin of=${SDCARD} conv=notrunc seek=3 bs=512 &>${NULLDEV}
+			# 0x2420000
+			dd if=${BINARIES_DIR}/bl2.dtb of=${SDCARD} conv=notrunc seek=73984 bs=512 &>${NULLDEV}
+			# 0x2430000
+			dd if=${BINARIES_DIR}/bl2.bin of=${SDCARD} conv=notrunc seek=74112 bs=512 &>${NULLDEV}
+		fi
 	fi
         # 0x50000
         dd if=${BINARIES_DIR}/uboot-env.bin-sdcard of=${SDCARD} conv=notrunc seek=640 bs=512 &>${NULLDEV}
         # 0xC0000
         dd if=${BINARIES_DIR}/fip.bin-sdcard of=${SDCARD} conv=notrunc seek=1536 bs=512 &>${NULLDEV}
-        # 0x2c0000
-        dd if=${BINARIES_DIR}/${MACHINE}.dtb of=${SDCARD} conv=notrunc seek=5632 bs=512 &>${NULLDEV}
-        # 0x300000
-        dd if=${BINARIES_DIR}/Image of=${SDCARD} conv=notrunc seek=6144 bs=512 &>${NULLDEV}
+
+        if grep -Eq "^BR2_ANTI_ROLLBACK_AB_BOOT=y$" ${BR2_CONFIG}; then
+			# 0x300000
+			dd if=${BINARIES_DIR}/Image.fit of=${SDCARD} conv=notrunc seek=6144 bs=512 &>${NULLDEV}
+        else
+			# 0x2c0000
+			dd if=${BINARIES_DIR}/${MACHINE}.dtb of=${SDCARD} conv=notrunc seek=5632 bs=512 &>${NULLDEV}
+			# 0x300000
+			dd if=${BINARIES_DIR}/Image of=${SDCARD} conv=notrunc seek=6144 bs=512 &>${NULLDEV}
+        fi
+
+		if grep -Eq "^BR2_ANTI_ROLLBACK_AB_BOOT=y$" ${BR2_CONFIG}; then
+			# 0x2450000
+			dd if=${BINARIES_DIR}/uboot-env.bin-sdcard of=${SDCARD} conv=notrunc seek=74368 bs=512 &>${NULLDEV}
+			# 0x24C0000
+			dd if=${BINARIES_DIR}/fip.bin-sdcard of=${SDCARD} conv=notrunc seek=75264 bs=512 &>${NULLDEV}
+			# 0x2700000
+			dd if=${BINARIES_DIR}/Image.fit of=${SDCARD} conv=notrunc seek=79872 bs=512 &>${NULLDEV}
+		fi
+
         # root fs
         dd if=${BINARIES_DIR}/rootfs.ext4 of=${SDCARD} conv=notrunc,fsync seek=1 bs=$(($BOOT_SPACE_ALIGNED*1024)) &>${NULLDEV}
 }
 
 
 uboot_cmd() {
-	cp ${PROJECT_DIR}/uboot-env.txt ${BINARIES_DIR}/uboot-env.txt
+	if grep -Eq "^BR2_ANTI_ROLLBACK_AB_BOOT=y$" ${BR2_CONFIG}; then
+		cp ${PROJECT_DIR}/rollback/uboot-env.txt ${BINARIES_DIR}/uboot-env.txt
+	else
+		cp ${PROJECT_DIR}/uboot-env.txt ${BINARIES_DIR}/uboot-env.txt
+	fi
 	if echo ${MACHINE} | grep -q "256"
 	then	
 		if [[ $IS_OPTEE == "yes" ]] 
@@ -383,6 +561,10 @@ main()
 	IS_OPTEE=$(optee_image)
 	SDCARD=${BINARIES_DIR}/${IMGDEPLOYDIR}/${IMAGE_BASENAME}-${MACHINE}.rootfs.sdcard
 
+	if grep -Eq "^BR2_ANTI_ROLLBACK_AB_BOOT=y$" ${BR2_CONFIG}; then
+		NUWRITER_DIR=${PROJECT_DIR}/rollback/nuwriter
+	fi
+
 	#Create nuwriter folder
 	if [ ! -d ${NUWRITER_TARGET} ]; then
 		mkdir ${NUWRITER_TARGET}
@@ -407,6 +589,10 @@ main()
 	rm fip.bin-* -f;
 	rm header-${IMAGE_BASENAME}*.bin pack-${IMAGE_BASENAME}*.bin ${IMAGE_BASENAME}*.sdcard -rf;)
 	uboot_cmd
+
+	if grep -Eq "^BR2_ANTI_ROLLBACK_AB_BOOT=y$" ${BR2_CONFIG}; then
+		make_signed_fit
+	fi
 
 	if [[ $(echo $UBOOT_DTB_NAME | grep "spinand") != "" ]]
 	then

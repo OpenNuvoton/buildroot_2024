@@ -1,6 +1,8 @@
 config BR2_ANTI_ROLLBACK_AB_BOOT
 	bool "Enable A/B boot and Anti-Rollback"
-	select BR2_TARGET_MA35D1_SECURE_BOOT
+	select BR2_TARGET_MA35D1_SECURE_BOOT if BR2_NUVOTON_MA35D1
+	select BR2_TARGET_MA35D0_SECURE_BOOT if BR2_NUVOTON_MA35D0
+	select BR2_TARGET_MA35H0_SECURE_BOOT if BR2_NUVOTON_MA35H0
 	select BR2_TARGET_OTP_ANTI_ROLLBACK
 	help
 	  Enable dual-slot A/B boot and rollback support.
