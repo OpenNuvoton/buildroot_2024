@@ -521,6 +521,10 @@ uboot_cmd() {
 
 	if grep -Eq "^BR2_ANTI_ROLLBACK_AB_BOOT=y$" ${BR2_CONFIG}; then
 		cp ${PROJECT_DIR}/rollback/uboot-env.txt ${BINARIES_DIR}/uboot-env.txt
+		if grep -Eq "^BR2_MA35_PID_DDR_OPTEE_MEM_FIXUP=y$" "${BR2_CONFIG}"; then
+			sed -i 's/^optee_rmem=.*/optee_rmem=1/' "${BINARIES_DIR}/uboot-env.txt"
+			sed -i 's/^memargs=.*/memargs=/' "${BINARIES_DIR}/uboot-env.txt"
+		fi
 	else
 		cp ${PROJECT_DIR}/uboot-env.txt ${BINARIES_DIR}/uboot-env.txt
 	fi

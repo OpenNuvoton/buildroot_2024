@@ -48,6 +48,25 @@ config BR2_TARGET_OTP_ANTI_ROLLBACK
 
 		  Default: disabled (n).
 
+config BR2_MA35_PID_DDR_OPTEE_MEM_FIXUP
+	bool "Adjust DDR size and OP-TEE reserved memory by PID"
+	select BR2_TARGET_DDR_AUTO_DETECT
+	help
+	  Use a 256MB DDR configuration as the baseline to support
+	  devices with 256MB or larger DDR using one firmware image.
+
+	  At boot, U-Boot adjusts /memory/reg based on the hardware ID
+	  and adds an OP-TEE reserved-memory node with no-map when
+	  the "optee_rmem" environment variable is set to 1.
+
+	  Current 512MB models:
+	    - MA35D16AJ87C
+	    - MA35D16F987C
+	    - MA35D16FJ87C
+	    - MA35D14F984
+	    - MA35D03FJ64C
+	    - MA35H04FJ64C
+
 config BR2_MA35_ARB_LINUX_VER
 	int "Linux Anti-Rollback Version"
 	default 0
