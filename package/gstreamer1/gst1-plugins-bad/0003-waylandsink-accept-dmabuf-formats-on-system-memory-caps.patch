@@ -1,0 +1,58 @@
+From: Joey Lu <yclu4@nuvoton.com>
+Subject: [PATCH] waylandsink: accept dmabuf-backed NV12 with plain video/x-raw caps
+
+V4L2 stateless decoders (v4l2slh264dec) output dmabuf-backed buffers with
+plain video/x-raw caps (no memory:DMABuf feature), so waylandsink rejected
+NV12 (not-negotiated) when the compositor only offers it through
+zwp_linux_dmabuf_v1. Advertise the dmabuf formats on the system-memory caps as
+well, and accept them in set_caps(). show_frame() already decides per buffer
+(dmabuf memory -> linux-dmabuf wl_buffer), so zero-copy needs no other change.
+Non-dmabuf buffers in such a format still fail (no shm NV12).
+
+---
+--- a/ext/wayland/gstwaylandsink.c	2026-10-16 10:49:52.561521453 +0800
++++ b/ext/wayland/gstwaylandsink.c	2026-10-16 10:49:52.563190482 +0800
+@@ -543,9 +543,6 @@
+       }
+     }
+ 
+-    gst_structure_take_value (gst_caps_get_structure (caps, 0), "format",
+-        &shm_list);
+-
+     /* Add corresponding dmabuf formats */
+     formats = gst_wl_display_get_dmabuf_formats (self->display);
+     for (i = 0; i < formats->len; i++) {
+@@ -555,9 +552,21 @@
+         g_value_init (&value, G_TYPE_STRING);
+         g_value_set_static_string (&value, gst_video_format_to_string (gfmt));
+         gst_value_list_append_and_take_value (&dmabuf_list, &value);
++
++        /* V4L2 stateless decoders output dmabuf-backed buffers with plain
++         * video/x-raw caps (no memory:DMABuf feature). Also accept the dmabuf
++         * formats there; show_frame() checks the memory of each buffer. */
++        if (!gst_wl_display_check_format_for_shm (self->display, gfmt)) {
++          g_value_init (&value, G_TYPE_STRING);
++          g_value_set_static_string (&value, gst_video_format_to_string (gfmt));
++          gst_value_list_append_and_take_value (&shm_list, &value);
++        }
+       }
+     }
+ 
++    gst_structure_take_value (gst_caps_get_structure (caps, 0), "format",
++        &shm_list);
++
+     gst_structure_take_value (gst_caps_get_structure (caps, 1), "format",
+         &dmabuf_list);
+ 
+@@ -630,7 +639,10 @@
+   if (use_dmabuf) {
+     if (!gst_wl_display_check_format_for_dmabuf (self->display, format))
+       goto unsupported_format;
+-  } else if (!gst_wl_display_check_format_for_shm (self->display, format)) {
++  } else if (!gst_wl_display_check_format_for_shm (self->display, format) &&
++      !gst_wl_display_check_format_for_dmabuf (self->display, format)) {
++    /* plain caps with dmabuf-only formats (e.g. NV12 from V4L2 decoders):
++     * the buffers must be dmabuf-backed, checked in show_frame() */
+     goto unsupported_format;
+   }
+ 
