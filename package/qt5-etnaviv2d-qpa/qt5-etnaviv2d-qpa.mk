@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-QT5_ETNAVIV2D_QPA_VERSION = v1.0
+QT5_ETNAVIV2D_QPA_VERSION = v1.1
 QT5_ETNAVIV2D_QPA_SITE = https://github.com/OpenNuvoton/MA35D1_Graphics.git
 QT5_ETNAVIV2D_QPA_SITE_METHOD = git
 QT5_ETNAVIV2D_QPA_SUBDIR = qt/etnaviv2d-qpa

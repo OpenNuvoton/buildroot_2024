@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-NU_HMI_CONTROLLER_VERSION = v1.0
+NU_HMI_CONTROLLER_VERSION = v1.1
 NU_HMI_CONTROLLER_SITE = https://github.com/OpenNuvoton/MA35D1_Graphics.git
 NU_HMI_CONTROLLER_SITE_METHOD = git
 NU_HMI_CONTROLLER_SUBDIR = weston/ivi/nu-hmi-controller

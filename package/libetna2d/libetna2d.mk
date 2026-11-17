@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-LIBETNA2D_VERSION = v1.0
+LIBETNA2D_VERSION = v1.1
 LIBETNA2D_SITE = https://github.com/OpenNuvoton/MA35D1_Graphics.git
 LIBETNA2D_SITE_METHOD = git
 LIBETNA2D_SUBDIR = drm/libetna2d
