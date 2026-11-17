@@ -11,7 +11,7 @@ fi
 weston_pid=$(pidof weston)
 
 if [ -z "${weston_pid}" ] ; then
-	weston --tty=1 --backend=drm-backend.so --config=/etc/xdg/weston/weston.ini --shell=kiosk-shell.so --use-pixman &
+	weston --tty=1 --backend=drm-backend.so --config=/etc/xdg/weston/weston.ini --use-pixman &
 fi
 
 # weston 9.0.0, display_id=0

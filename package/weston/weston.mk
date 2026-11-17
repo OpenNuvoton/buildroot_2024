@@ -216,4 +216,11 @@ endef
 WESTON_POST_INSTALL_TARGET_HOOKS += WESTON_CONFIG_RESISTIVE_TOUCHSCREEN
 endif
 
+# Ship weston-kiosk.ini, so switching shells on-target is a simple cp.
+# Run after the hooks above that edit weston.ini.
+define WESTON_INSTALL_KIOSK_INI
+	cp $(TARGET_DIR)/etc/xdg/weston/weston.ini $(TARGET_DIR)/etc/xdg/weston/weston-kiosk.ini
+endef
+WESTON_POST_INSTALL_TARGET_HOOKS += WESTON_INSTALL_KIOSK_INI
+
 $(eval $(meson-package))
