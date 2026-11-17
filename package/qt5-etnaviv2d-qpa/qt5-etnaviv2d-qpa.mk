@@ -49,4 +49,24 @@ define QT5_ETNAVIV2D_QPA_INSTALL_BENCHMARK
 endef
 QT5_ETNAVIV2D_QPA_POST_INSTALL_TARGET_HOOKS += QT5_ETNAVIV2D_QPA_INSTALL_BENCHMARK
 
+# Optional demos.
+ifeq ($(BR2_PACKAGE_QT5_ETNAVIV2D_QPA_DEMOS),y)
+QT5_ETNAVIV2D_QPA_DEMOS_DIR = $(QT5_ETNAVIV2D_QPA_SRCDIR)/../demos
+
+define QT5_ETNAVIV2D_QPA_BUILD_DEMOS
+	rm -rf $(@D)/demos-build
+	mkdir -p $(@D)/demos-build
+	cd $(@D)/demos-build && \
+		$(TARGET_MAKE_ENV) $(QT5_QMAKE) $(QT5_ETNAVIV2D_QPA_DEMOS_DIR)/demos.pro
+	$(TARGET_MAKE_ENV) $(MAKE) -C $(@D)/demos-build
+endef
+QT5_ETNAVIV2D_QPA_POST_BUILD_HOOKS += QT5_ETNAVIV2D_QPA_BUILD_DEMOS
+
+define QT5_ETNAVIV2D_QPA_INSTALL_DEMOS
+	$(INSTALL) -D -m 0755 $(@D)/demos-build/cockpit/cockpit $(TARGET_DIR)/usr/bin/cockpit
+	$(INSTALL) -D -m 0755 $(@D)/demos-build/dashboard/dashboard $(TARGET_DIR)/usr/bin/dashboard
+endef
+QT5_ETNAVIV2D_QPA_POST_INSTALL_TARGET_HOOKS += QT5_ETNAVIV2D_QPA_INSTALL_DEMOS
+endif
+
 $(eval $(qmake-package))

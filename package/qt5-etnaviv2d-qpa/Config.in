@@ -33,3 +33,9 @@ config BR2_PACKAGE_QT5_ETNAVIV2D_QPA
 	  no GL rendering happens through it) so that Weston's drm-backend
 	  builds with dmabuf-import support (BUILD_DRM_GBM) for its pixman
 	  renderer; without it, client surfaces silently fail to display.
+
+config BR2_PACKAGE_QT5_ETNAVIV2D_QPA_DEMOS
+	bool "install demos"
+	depends on BR2_PACKAGE_QT5_ETNAVIV2D_QPA
+	help
+	  Build and install the demos into /usr/bin.
